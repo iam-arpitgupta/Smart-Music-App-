@@ -6,7 +6,7 @@ Uses an unauthenticated YTMusic instance so no OAuth setup is needed.
 
 from ytmusicapi import YTMusic
 
-from app.schemas import SearchResult
+from app.schemas import ArtistDetail, ArtistResult, SearchResult
 
 # Single shared instance (unauthenticated).
 _ytm = YTMusic()
@@ -46,6 +46,90 @@ def search(query: str, limit: int = 20) -> list[SearchResult]:
     return results
 
 
+def search_artists(query: str, limit: int = 10) -> list[ArtistResult]:
+    """Search YouTube Music for artists matching *query*."""
+    raw_results = _ytm.search(query, filter="artists", limit=limit)
+
+    results: list[ArtistResult] = []
+    for item in raw_results:
+        browse_id = item.get("browseId", "")
+        if not browse_id:
+            continue
+
+        name = item.get("artist", "")
+        thumbnails = item.get("thumbnails", [])
+        thumbnail_url = thumbnails[-1]["url"] if thumbnails else None
+        subscribers = item.get("subscribers")
+
+        results.append(
+            ArtistResult(
+                browse_id=browse_id,
+                name=name,
+                thumbnail=thumbnail_url,
+                subscribers=subscribers,
+            )
+        )
+
+    return results
+
+
+def get_artist_detail(browse_id: str) -> ArtistDetail:
+    """Get artist info and their songs from YouTube Music."""
+    artist_data = _ytm.get_artist(browse_id)
+
+    name = artist_data.get("name", "Unknown")
+    description = artist_data.get("description")
+    subscribers = artist_data.get("subscribers")
+
+    thumbnails = artist_data.get("thumbnails", [])
+    thumbnail_url = thumbnails[-1]["url"] if thumbnails else None
+
+    # Extract songs from the artist page
+    songs: list[SearchResult] = []
+    songs_section = artist_data.get("songs", {})
+    browse_id_songs = songs_section.get("browseId")
+
+    # Retrieve the full list if a browseId is available
+    if browse_id_songs:
+        try:
+            full_songs = _ytm.get_playlist(browse_id_songs, limit=100)
+            tracks = full_songs.get("tracks", [])
+        except Exception:
+            tracks = songs_section.get("results", [])
+    else:
+        tracks = songs_section.get("results", [])
+
+    for track in tracks:
+        video_id = track.get("videoId", "")
+        if not video_id:
+            continue
+
+        t_thumbnails = track.get("thumbnails", [])
+        t_thumb = t_thumbnails[-1]["url"] if t_thumbnails else None
+
+        artists = track.get("artists", [])
+        artist_name = ", ".join(a.get("name", "") for a in artists) if artists else name
+
+        songs.append(
+            SearchResult(
+                video_id=video_id,
+                title=track.get("title", ""),
+                artist=artist_name,
+                thumbnail=t_thumb,
+                duration=track.get("duration"),
+            )
+        )
+
+    return ArtistDetail(
+        browse_id=browse_id,
+        name=name,
+        thumbnail=thumbnail_url,
+        description=description,
+        subscribers=subscribers,
+        songs=songs,
+    )
+
+
 def get_watch_playlist(video_id: str) -> list[dict]:
     """
     Fetch the "Watch Playlist" (radio / similar songs queue) for a video.
@@ -54,3 +138,4 @@ def get_watch_playlist(video_id: str) -> list[dict]:
     """
     playlist = _ytm.get_watch_playlist(videoId=video_id)
     return playlist.get("tracks", [])
+
