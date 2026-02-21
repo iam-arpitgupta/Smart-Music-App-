@@ -139,3 +139,74 @@ def get_watch_playlist(video_id: str) -> list[dict]:
     playlist = _ytm.get_watch_playlist(videoId=video_id)
     return playlist.get("tracks", [])
 
+
+def get_trending(limit: int = 15) -> list[SearchResult]:
+    """
+    Fetch worldwide trending / chart songs from YouTube Music.
+    Falls back to a curated search if charts are unavailable.
+    """
+    try:
+        charts = _ytm.get_charts(country="ZZ")  # ZZ = worldwide
+        tracks = charts.get("songs", {}).get("items", [])
+    except Exception:
+        tracks = []
+
+    results: list[SearchResult] = []
+    for item in tracks[:limit]:
+        video_id = item.get("videoId", "")
+        if not video_id:
+            continue
+        thumbnails = item.get("thumbnails", [])
+        thumb = thumbnails[-1]["url"] if thumbnails else None
+        artists = item.get("artists", [])
+        artist_name = ", ".join(a.get("name", "") for a in artists) if artists else "Unknown"
+        results.append(
+            SearchResult(
+                video_id=video_id,
+                title=item.get("title", ""),
+                artist=artist_name,
+                thumbnail=thumb,
+                duration=item.get("duration"),
+            )
+        )
+
+    # Fallback: search for popular songs if charts returned nothing
+    if not results:
+        results = search("top hits 2024", limit=limit)
+
+    return results
+
+
+def get_top_artists(limit: int = 8) -> list[ArtistResult]:
+    """
+    Fetch top artists from YouTube Music worldwide charts.
+    Falls back to searching well-known artists if charts unavailable.
+    """
+    try:
+        charts = _ytm.get_charts(country="ZZ")
+        artists_raw = charts.get("artists", {}).get("items", [])
+    except Exception:
+        artists_raw = []
+
+    results: list[ArtistResult] = []
+    for item in artists_raw[:limit]:
+        browse_id = item.get("browseId", "")
+        if not browse_id:
+            continue
+        thumbnails = item.get("thumbnails", [])
+        thumb = thumbnails[-1]["url"] if thumbnails else None
+        results.append(
+            ArtistResult(
+                browse_id=browse_id,
+                name=item.get("title", ""),
+                thumbnail=thumb,
+                subscribers=item.get("subscribers"),
+            )
+        )
+
+    # Fallback: search for popular artists if charts returned nothing
+    if not results:
+        results = search_artists("Taylor Swift", limit=limit)
+
+    return results
+

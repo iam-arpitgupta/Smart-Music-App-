@@ -2,10 +2,10 @@
 Smart DJ — Multi-agent chatbot router.
 
 Uses LangGraph with a Supervisor/Router pattern:
-  Supervisor ─┬─▶ Mood Agent   (playlist search)
-               ├─▶ Artist Agent (top tracks by artist)
-               ├─▶ Blend Agent  (cross-cultural chart blend)
-               └─▶ END          (just chat, no music action)
+  Supervisor ─┬─▶ Mood Agent    (playlist search by feeling / activity)
+               ├─▶ Artist Agent  (top tracks by a recommended artist)
+               ├─▶ Builder Agent (cross-genre / cross-region custom blend)
+               └─▶ END           (just chat, no music action)
 
 Stateless: the Flutter frontend sends the full chat history each request.
 All ytmusicapi calls are wrapped in asyncio.to_thread so they never block
@@ -15,6 +15,7 @@ the event loop or other streaming endpoints.
 import asyncio
 import json
 import os
+import random
 import re
 from typing import Any, Dict, List, TypedDict
 
@@ -59,7 +60,7 @@ def _get_graph():
     workflow.add_node("supervisor", supervisor_node)
     workflow.add_node("mood_agent", mood_node)
     workflow.add_node("artist_agent", artist_node)
-    workflow.add_node("blend_agent", blend_node)
+    workflow.add_node("builder_agent", builder_node)
     workflow.set_entry_point("supervisor")
 
     def _route_logic(state: AgentState) -> str:
@@ -71,13 +72,13 @@ def _get_graph():
         {
             "mood_agent": "mood_agent",
             "artist_agent": "artist_agent",
-            "blend_agent": "blend_agent",
+            "builder_agent": "builder_agent",
             "END": END,
         },
     )
     workflow.add_edge("mood_agent", END)
     workflow.add_edge("artist_agent", END)
-    workflow.add_edge("blend_agent", END)
+    workflow.add_edge("builder_agent", END)
 
     _graph = workflow.compile()
     return _graph
@@ -102,6 +103,7 @@ class ChatResponse(BaseModel):
 class AgentState(TypedDict):
     messages: List[Any]
     next_route: str
+    extracted: str  # supervisor-extracted hint for worker agents
     music_payload: Dict[str, Any]
 
 
@@ -168,76 +170,110 @@ async def _get_artist_top_tracks(artist_query: str) -> Dict[str, Any]:
     }
 
 
-async def _get_blend() -> Dict[str, Any]:
-    """Interleave trending tracks from India, US, and Global charts."""
-    charts_in, charts_us, charts_zz = await asyncio.gather(
-        asyncio.to_thread(_ytm.get_charts, "IN"),
-        asyncio.to_thread(_ytm.get_charts, "US"),
-        asyncio.to_thread(_ytm.get_charts, "ZZ"),
-    )
+async def _build_custom_blend(genres: List[str], per_genre: int = 6) -> Dict[str, Any]:
+    """
+    Build a Global Blend playlist from user-specified genres / regions.
 
-    def _extract(charts: dict, n: int = 5) -> list[dict]:
-        items = charts.get("videos", {}).get("items", [])[:n]
-        out = []
-        for t in items:
-            vid = t.get("videoId", "")
+    Fires one search per genre concurrently, then interleaves results
+    in round-robin order and shuffles lightly for variety.
+    """
+
+    async def _search_genre(genre: str) -> List[dict]:
+        raw = await asyncio.to_thread(
+            _ytm.search, f"top {genre} songs", "songs", None, per_genre
+        )
+        out: list[dict] = []
+        for item in raw:
+            vid = item.get("videoId", "")
             if not vid:
                 continue
-            artists = t.get("artists", [])
-            thumbs = t.get("thumbnails", [])
+            artists = item.get("artists", [])
+            thumbs = item.get("thumbnails", [])
             out.append(
                 {
                     "video_id": vid,
-                    "title": t.get("title", ""),
+                    "title": item.get("title", ""),
                     "artist": ", ".join(a.get("name", "") for a in artists),
                     "thumbnail": thumbs[-1]["url"] if thumbs else None,
+                    "duration": item.get("duration"),
+                    "genre_tag": genre,
                 }
             )
         return out
 
-    in_songs = _extract(charts_in)
-    us_songs = _extract(charts_us)
-    zz_songs = _extract(charts_zz)
+    # Fire all searches concurrently
+    buckets = await asyncio.gather(*[_search_genre(g) for g in genres])
 
+    # Round-robin interleave
     blend: list[dict] = []
-    max_len = max(len(in_songs), len(us_songs), len(zz_songs), 1)
+    max_len = max((len(b) for b in buckets), default=0)
     for i in range(max_len):
-        if i < len(in_songs):
-            blend.append(in_songs[i])
-        if i < len(us_songs):
-            blend.append(us_songs[i])
-        if i < len(zz_songs):
-            blend.append(zz_songs[i])
+        for bucket in buckets:
+            if i < len(bucket):
+                blend.append(bucket[i])
 
-    return {"type": "tracks", "data": blend}
+    # Light shuffle to avoid strict alternation
+    if len(blend) > 4:
+        # Shuffle in small windows to keep diversity but break patterns
+        window = 3
+        for start in range(0, len(blend) - window, window):
+            sub = blend[start : start + window]
+            random.shuffle(sub)
+            blend[start : start + window] = sub
+
+    return {"type": "tracks", "label": "Global Blend", "data": blend}
 
 
 # ─── Agent nodes ──────────────────────────────────────────────────
 
 _SUPERVISOR_PROMPT = """\
-You are a Smart DJ Chatbot for the Resonance music app.
-Analyze the conversation and decide what the user needs.
+You are the brain of the Smart DJ Chatbot for the Resonance music app.
+Carefully read the full conversation and decide the user's intent.
 
-Rules:
-1. If the user just wants to chat or says hello, reply naturally and
-   set route to "END".
-2. If they want a playlist for a mood, vibe, or activity, set route
-   to "mood_agent".
-3. If they ask WHO to listen to or want artist recommendations, set
-   route to "artist_agent".
-4. If they want a mix/blend of global, Hindi, or Punjabi songs, set
-   route to "blend_agent".
+ROUTING RULES (apply the FIRST rule that matches):
 
-You MUST respond with valid JSON only — no markdown, no backticks:
-{"response": "<your conversational text>", "route": "<mood_agent|artist_agent|blend_agent|END>"}
+1. **Greeting / general chat**: The user just wants to talk, says hello,
+   asks how you are, or has no music-related request.
+   → route = "END", extracted = ""
+
+2. **Mood / Activity playlist**: The user describes a feeling, emotion,
+   or activity (e.g. "I'm sad", "workout time", "need chill vibes").
+   → route = "mood_agent"
+   → extracted = a concise 3-5 word YouTube Music search query that
+     captures their mood or activity.
+
+3. **Artist recommendation**: The user asks WHO to listen to, wants
+   artist suggestions, or names a specific artist to explore.
+   → route = "artist_agent"
+   → extracted = the name of one renowned musical artist that fits
+     the user's request.
+
+4. **Custom mix / blend / multi-genre playlist**: The user asks for a
+   mix, blend, mashup, or mentions multiple genres, languages, or
+   regions they want combined (e.g. "mix of Punjabi, English, Hindi").
+   → route = "builder_agent"
+   → extracted = comma-separated list of the genres/regions/styles
+     they mentioned (e.g. "Meditative, Punjabi, English, Hindi, Spanish").
+
+RESPOND WITH VALID JSON ONLY — no markdown fences, no extra text:
+{"response": "<your friendly conversational reply>", "route": "<mood_agent|artist_agent|builder_agent|END>", "extracted": "<see rules above>"}
 """
 
 
 def _parse_supervisor_json(text: str) -> dict:
     """Best-effort extraction of JSON from an LLM response."""
+    # Strip markdown code fences if present
     cleaned = re.sub(r"^```(?:json)?\s*", "", text.strip())
     cleaned = re.sub(r"\s*```$", "", cleaned)
-    return json.loads(cleaned)
+
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+        # Fallback: try to find the first JSON object in the response
+        match = re.search(r"\{.*\}", cleaned, re.DOTALL)
+        if match:
+            return json.loads(match.group(0))
+        raise
 
 
 async def supervisor_node(state: AgentState) -> AgentState:
@@ -250,11 +286,12 @@ async def supervisor_node(state: AgentState) -> AgentState:
 
     try:
         parsed = _parse_supervisor_json(response.content)
-        state["messages"].append(AIMessage(content=parsed["response"]))
+        state["messages"].append(AIMessage(content=parsed.get("response", "")))
         route = parsed.get("route", "END")
-        if route not in ("mood_agent", "artist_agent", "blend_agent", "END"):
+        if route not in ("mood_agent", "artist_agent", "builder_agent", "END"):
             route = "END"
         state["next_route"] = route
+        state["extracted"] = parsed.get("extracted", "")
     except Exception:
         state["messages"].append(
             AIMessage(
@@ -263,41 +300,86 @@ async def supervisor_node(state: AgentState) -> AgentState:
             )
         )
         state["next_route"] = "END"
+        state["extracted"] = ""
 
     return state
 
 
 async def mood_node(state: AgentState) -> AgentState:
+    """Fetch a mood-based playlist.
+
+    Uses the supervisor's pre-extracted search query when available,
+    otherwise falls back to an LLM call.
+    """
     from langchain_core.messages import SystemMessage
 
-    llm = _get_llm()
-    prompt = SystemMessage(
-        content="Generate a 3-5 word YouTube Music search query that "
-        "captures the user's mood or activity. Output ONLY the "
-        "query string, nothing else."
-    )
-    llm_resp = await llm.ainvoke([prompt] + state["messages"])
-    payload = await _search_songs(llm_resp.content.strip().strip('"'))
+    query = state.get("extracted", "").strip()
+    if not query:
+        llm = _get_llm()
+        prompt = SystemMessage(
+            content="Generate a 3-5 word YouTube Music search query that "
+            "captures the user's mood or activity. Output ONLY the "
+            "query string, nothing else."
+        )
+        llm_resp = await llm.ainvoke([prompt] + state["messages"])
+        query = llm_resp.content.strip().strip('"')
+
+    payload = await _search_songs(query)
     state["music_payload"] = payload
     return state
 
 
 async def artist_node(state: AgentState) -> AgentState:
+    """Recommend an artist and return their top tracks.
+
+    Uses the supervisor's pre-extracted artist name when available,
+    otherwise asks the LLM for a recommendation.
+    """
     from langchain_core.messages import SystemMessage
 
-    llm = _get_llm()
-    prompt = SystemMessage(
-        content="Name one musical artist that perfectly fits the user's "
-        "mood or request. Output ONLY the artist's name, nothing else."
-    )
-    llm_resp = await llm.ainvoke([prompt] + state["messages"])
-    payload = await _get_artist_top_tracks(llm_resp.content.strip().strip('"'))
+    artist_name = state.get("extracted", "").strip()
+    if not artist_name:
+        llm = _get_llm()
+        prompt = SystemMessage(
+            content="Based on the conversation, name one renowned musical "
+            "artist that perfectly fits the user's vibe or request. "
+            "Output ONLY the artist's full name, nothing else."
+        )
+        llm_resp = await llm.ainvoke([prompt] + state["messages"])
+        artist_name = llm_resp.content.strip().strip('"')
+
+    payload = await _get_artist_top_tracks(artist_name)
     state["music_payload"] = payload
     return state
 
 
-async def blend_node(state: AgentState) -> AgentState:
-    payload = await _get_blend()
+async def builder_node(state: AgentState) -> AgentState:
+    """Build a custom multi-genre blend playlist.
+
+    Reads the supervisor's comma-separated genre list, fires concurrent
+    searches, and interleaves results into a Global Blend.
+    """
+    from langchain_core.messages import SystemMessage
+
+    raw = state.get("extracted", "").strip()
+    if raw:
+        genres = [g.strip() for g in raw.split(",") if g.strip()]
+    else:
+        # Fallback: ask the LLM to extract genres from chat history
+        llm = _get_llm()
+        prompt = SystemMessage(
+            content="The user wants a custom music blend. List the genres, "
+            "languages, or regions they want as a comma-separated string. "
+            "Output ONLY the comma-separated list, nothing else. "
+            "Example: Punjabi, Hindi, English pop, Spanish"
+        )
+        llm_resp = await llm.ainvoke([prompt] + state["messages"])
+        genres = [g.strip() for g in llm_resp.content.strip().split(",") if g.strip()]
+
+    if not genres:
+        genres = ["Global hits"]  # safety net
+
+    payload = await _build_custom_blend(genres)
     state["music_payload"] = payload
     return state
 
@@ -327,7 +409,7 @@ async def chat_endpoint(req: ChatRequest):
 
     The frontend sends the current message + full chat history.  The
     supervisor analyses intent and routes to the appropriate specialist
-    agent (mood / artist / blend) or just replies with text.
+    agent (mood / artist / builder) or just replies with text.
     """
     try:
         from langchain_core.messages import AIMessage, HumanMessage
@@ -339,6 +421,7 @@ async def chat_endpoint(req: ChatRequest):
         initial_state: AgentState = {
             "messages": messages,
             "next_route": "",
+            "extracted": "",
             "music_payload": {},
         }
 

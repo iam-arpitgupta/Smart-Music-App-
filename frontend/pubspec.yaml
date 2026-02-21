@@ -1,0 +1,40 @@
+name: frontend
+description: "Music App — Lightweight Android music streaming client."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # Audio playback & background service
+  just_audio: ^0.9.43
+  audio_service: ^0.18.17
+  audio_session: ^0.1.25
+
+  # State management
+  flutter_riverpod: ^2.6.1
+
+  # Networking
+  http: ^1.4.0
+
+  # Local database
+  sqflite: ^2.4.2
+  path_provider: ^2.1.5
+
+  # UI utilities
+  cached_network_image: ^3.4.1
+  google_fonts: ^6.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
