@@ -31,7 +31,7 @@ class LibraryScreen extends ConsumerWidget {
                       height: 40,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.08),
+                        color: Colors.white.withOpacity(0.08),
                       ),
                       child: const Icon(
                         Icons.arrow_back_ios_new_rounded,
@@ -59,7 +59,7 @@ class LibraryScreen extends ConsumerWidget {
                       height: 40,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.08),
+                        color: Colors.white.withOpacity(0.08),
                       ),
                       child: const Icon(
                         Icons.more_horiz_rounded,
@@ -104,7 +104,7 @@ class LibraryScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(16),
                     gradient: LinearGradient(
                       colors: [
-                        accent.withValues(alpha: 0.15),
+                        accent.withOpacity(0.15),
                         const Color(0xFF1E1E1E),
                       ],
                       begin: Alignment.topLeft,
@@ -119,7 +119,7 @@ class LibraryScreen extends ConsumerWidget {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(14),
                           gradient: LinearGradient(
-                            colors: [accent, accent.withValues(alpha: 0.6)],
+                            colors: [accent, accent.withOpacity(0.6)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -146,21 +146,21 @@ class LibraryScreen extends ConsumerWidget {
                                 '${list.length} songs',
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: Colors.white.withValues(alpha: 0.5),
+                                  color: Colors.white.withOpacity(0.5),
                                 ),
                               ),
                               loading: () => Text(
                                 'Loading…',
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: Colors.white.withValues(alpha: 0.5),
+                                  color: Colors.white.withOpacity(0.5),
                                 ),
                               ),
                               error: (_, _) => Text(
                                 '0 songs',
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: Colors.white.withValues(alpha: 0.5),
+                                  color: Colors.white.withOpacity(0.5),
                                 ),
                               ),
                             ),
@@ -172,7 +172,7 @@ class LibraryScreen extends ConsumerWidget {
                         height: 40,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.08),
+                          color: Colors.white.withOpacity(0.08),
                         ),
                         child: const Icon(
                           Icons.play_arrow_rounded,
@@ -197,7 +197,7 @@ class LibraryScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: Colors.white.withOpacity(0.9),
                   ),
                 ),
               ),
@@ -227,7 +227,7 @@ class LibraryScreen extends ConsumerWidget {
                     Icon(
                       Icons.library_music_rounded,
                       size: 64,
-                      color: Colors.white.withValues(alpha: 0.12),
+                      color: Colors.white.withOpacity(0.12),
                     ),
                     const SizedBox(height: 16),
                     const Text(
@@ -242,7 +242,7 @@ class LibraryScreen extends ConsumerWidget {
                     Text(
                       'Songs you play will appear here',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: Colors.white.withOpacity(0.5),
                       ),
                     ),
                   ],

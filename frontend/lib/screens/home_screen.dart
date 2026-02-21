@@ -60,7 +60,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               decoration: InputDecoration(
                 hintText: 'Search songs, artists, albums...',
                 hintStyle: TextStyle(
-                  color: kTextMuted.withValues(alpha: 0.6),
+                  color: kTextMuted.withOpacity(0.6),
                   fontSize: 14,
                 ),
                 prefixIcon: const Icon(Icons.search_rounded,
@@ -124,7 +124,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.search_off_rounded,
-                    size: 56, color: kTextMuted.withValues(alpha: 0.3)),
+                    size: 56, color: kTextMuted.withOpacity(0.3)),
                 const SizedBox(height: 12),
                 const Text('No results found',
                     style: TextStyle(color: kTextMuted)),
@@ -213,7 +213,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.headphones_rounded,
-                      size: 64, color: kTextMuted.withValues(alpha: 0.2)),
+                      size: 64, color: kTextMuted.withOpacity(0.2)),
                   const SizedBox(height: 20),
                   const Text(
                     'Start listening',

@@ -160,11 +160,11 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
           child: Container(
             height: 48,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.06),
+              color: Colors.white.withOpacity(0.06),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: _focusNode.hasFocus
-                    ? kAccent.withValues(alpha: 0.3)
+                    ? kAccent.withOpacity(0.3)
                     : Colors.transparent,
               ),
             ),
@@ -175,7 +175,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
               style: const TextStyle(color: kTextWhite, fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'Search songs, artists...',
-                hintStyle: TextStyle(color: kTextMuted.withValues(alpha: 0.6)),
+                hintStyle: TextStyle(color: kTextMuted.withOpacity(0.6)),
                 prefixIcon: const Icon(Icons.search_rounded,
                     color: kTextMuted, size: 22),
                 suffixIcon: _searchController.text.isNotEmpty
@@ -234,7 +234,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.explore_rounded,
-                size: 64, color: kTextMuted.withValues(alpha: 0.3)),
+                size: 64, color: kTextMuted.withOpacity(0.3)),
             const SizedBox(height: 16),
             const Text(
               'Discover music & artists',
@@ -314,7 +314,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.06),
+                            color: Colors.white.withOpacity(0.06),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(Icons.arrow_back_rounded,
@@ -541,7 +541,7 @@ class _SectionHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: kAccent.withValues(alpha: 0.12),
+              color: kAccent.withOpacity(0.12),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -588,7 +588,7 @@ class _ArtistTileState extends State<_ArtistTile> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: _hovered
-                ? Colors.white.withValues(alpha: 0.06)
+                ? Colors.white.withOpacity(0.06)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
@@ -642,7 +642,7 @@ class _ArtistTileState extends State<_ArtistTile> {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: kAccent.withValues(alpha: 0.1),
+                  color: kAccent.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.chevron_right_rounded,

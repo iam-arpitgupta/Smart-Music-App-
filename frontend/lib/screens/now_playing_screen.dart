@@ -39,7 +39,7 @@ class NowPlayingScreen extends ConsumerWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              kAccent.withValues(alpha: 0.15),
+              kAccent.withOpacity(0.15),
               kBgDark,
             ],
             stops: const [0.0, 0.5],
@@ -86,12 +86,12 @@ class NowPlayingScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: kAccent.withValues(alpha: 0.12),
+                      color: kAccent.withOpacity(0.12),
                       blurRadius: 50,
                       spreadRadius: 5,
                     ),
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.5),
+                      color: Colors.black.withOpacity(0.5),
                       blurRadius: 30,
                       offset: const Offset(0, 16),
                     ),
@@ -153,7 +153,7 @@ class NowPlayingScreen extends ConsumerWidget {
                         trackHeight: 3,
                         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
                         overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-                        secondaryActiveTrackColor: kTextMuted.withValues(alpha: 0.2),
+                        secondaryActiveTrackColor: kTextMuted.withOpacity(0.2),
                       ),
                       child: Slider(
                         value: position.inMilliseconds.toDouble().clamp(
@@ -213,7 +213,7 @@ class NowPlayingScreen extends ConsumerWidget {
                         color: kAccent,
                         boxShadow: [
                           BoxShadow(
-                            color: kAccent.withValues(alpha: 0.3),
+                            color: kAccent.withOpacity(0.3),
                             blurRadius: 16,
                             offset: const Offset(0, 4),
                           ),

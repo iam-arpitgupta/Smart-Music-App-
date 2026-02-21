@@ -200,7 +200,7 @@ class _Sidebar extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 16,
-                  backgroundColor: kAccent.withValues(alpha: 0.2),
+                  backgroundColor: kAccent.withOpacity(0.2),
                   child: const Icon(Icons.person_rounded,
                       color: kAccent, size: 18),
                 ),
@@ -259,9 +259,9 @@ class _SidebarItemState extends State<_SidebarItem> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: widget.isActive
-                ? kAccent.withValues(alpha: 0.12)
+                ? kAccent.withOpacity(0.12)
                 : _hovered
-                    ? Colors.white.withValues(alpha: 0.04)
+                    ? Colors.white.withOpacity(0.04)
                     : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),

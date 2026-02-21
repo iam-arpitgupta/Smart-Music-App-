@@ -139,7 +139,7 @@ class _EffectsSheetState extends State<_EffectsSheet> {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: kAccent.withValues(alpha: 0.15),
+                  color: kAccent.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.equalizer_rounded,
@@ -163,7 +163,7 @@ class _EffectsSheetState extends State<_EffectsSheet> {
               margin: const EdgeInsets.symmetric(horizontal: 24),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.05),
+                color: Colors.white.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Row(
@@ -290,7 +290,7 @@ class _EffectSection extends StatelessWidget {
                         subtitle,
                         style: TextStyle(
                           fontSize: 11,
-                          color: kAccent.withValues(alpha: 0.7),
+                          color: kAccent.withOpacity(0.7),
                         ),
                       ),
                   ],
@@ -300,7 +300,7 @@ class _EffectSection extends StatelessWidget {
                 value: enabled,
                 onChanged: available ? onToggle : null,
                 activeThumbColor: kAccent,
-                activeTrackColor: kAccent.withValues(alpha: 0.3),
+                activeTrackColor: kAccent.withOpacity(0.3),
                 inactiveThumbColor: const Color(0xFF555555),
                 inactiveTrackColor: const Color(0xFF333333),
               ),
@@ -338,7 +338,7 @@ class _StyledSlider extends StatelessWidget {
         activeTrackColor: enabled ? kAccent : const Color(0xFF444444),
         inactiveTrackColor: const Color(0xFF2A2A2A),
         thumbColor: enabled ? kAccent : const Color(0xFF555555),
-        overlayColor: kAccent.withValues(alpha: 0.12),
+        overlayColor: kAccent.withOpacity(0.12),
         trackHeight: 4,
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
         overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),

@@ -62,7 +62,7 @@ class _AlbumCardState extends State<AlbumCard> {
                           color: kAccent,
                           boxShadow: [
                             BoxShadow(
-                              color: kAccent.withValues(alpha: 0.3),
+                              color: kAccent.withOpacity(0.3),
                               blurRadius: 10,
                             ),
                           ],
