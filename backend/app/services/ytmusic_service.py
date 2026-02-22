@@ -12,13 +12,13 @@ from app.schemas import ArtistDetail, ArtistResult, SearchResult
 _ytm = YTMusic()
 
 
-def search(query: str, limit: int = 20) -> list[SearchResult]:
+def search(query: str, limit: int = 20, filter: str | None = "songs") -> list[SearchResult]:
     """
-    Search YouTube Music for songs matching *query*.
+    Search YouTube Music for items matching *query* (e.g., songs, podcasts, videos).
 
     Returns a list of SearchResult objects with normalised fields.
     """
-    raw_results = _ytm.search(query, filter="songs", limit=limit)
+    raw_results = _ytm.search(query, filter=filter, limit=limit)
 
     results: list[SearchResult] = []
     for item in raw_results:

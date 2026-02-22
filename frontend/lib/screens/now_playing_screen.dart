@@ -188,62 +188,94 @@ class NowPlayingScreen extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   // Shuffle
-                  GestureDetector(
-                    onTap: () {
-                      ref.read(shuffleProvider.notifier).state = !shuffle;
-                    },
-                    child: Icon(Icons.shuffle_rounded,
-                        color: shuffle ? kAccent : kTextMuted, size: 22),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(24),
+                      onTap: () {
+                        ref.read(shuffleProvider.notifier).state = !shuffle;
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Icon(Icons.shuffle_rounded,
+                            color: shuffle ? kAccent : kTextMuted, size: 22),
+                      ),
+                    ),
                   ),
                   // Skip previous
-                  GestureDetector(
-                    onTap: () => skipPrevious(ref),
-                    child: const Icon(Icons.skip_previous_rounded,
-                        color: kTextWhite, size: 36),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(24),
+                      onTap: () => skipPrevious(ref),
+                      child: const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Icon(Icons.skip_previous_rounded,
+                            color: kTextWhite, size: 36),
+                      ),
+                    ),
                   ),
                   // Play/Pause
-                  GestureDetector(
-                    onTap: () =>
-                        isPlaying ? audioHandler.pause() : audioHandler.play(),
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: kAccent,
-                        boxShadow: [
-                          BoxShadow(
-                            color: kAccent.withOpacity(0.3),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                        size: 34,
-                        color: Colors.black,
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(32),
+                      onTap: () =>
+                          isPlaying ? audioHandler.pause() : audioHandler.play(),
+                      child: Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: kAccent,
+                          boxShadow: [
+                            BoxShadow(
+                              color: kAccent.withOpacity(0.3),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                          size: 34,
+                          color: Colors.black,
+                        ),
                       ),
                     ),
                   ),
                   // Skip next
-                  GestureDetector(
-                    onTap: () => skipNext(ref),
-                    child: const Icon(Icons.skip_next_rounded,
-                        color: kTextWhite, size: 36),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(24),
+                      onTap: () => skipNext(ref),
+                      child: const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Icon(Icons.skip_next_rounded,
+                            color: kTextWhite, size: 36),
+                      ),
+                    ),
                   ),
                   // Repeat
-                  GestureDetector(
-                    onTap: () {
-                      ref.read(repeatModeProvider.notifier).state =
-                          (repeatMode + 1) % 3;
-                    },
-                    child: Icon(
-                      repeatMode == 2
-                          ? Icons.repeat_one_rounded
-                          : Icons.repeat_rounded,
-                      color: repeatMode > 0 ? kAccent : kTextMuted,
-                      size: 22,
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(24),
+                      onTap: () {
+                        ref.read(repeatModeProvider.notifier).state =
+                            (repeatMode + 1) % 3;
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Icon(
+                          repeatMode == 2
+                              ? Icons.repeat_one_rounded
+                              : Icons.repeat_rounded,
+                          color: repeatMode > 0 ? kAccent : kTextMuted,
+                          size: 22,
+                        ),
+                      ),
                     ),
                   ),
                 ],

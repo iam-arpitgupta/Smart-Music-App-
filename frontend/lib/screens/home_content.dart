@@ -176,7 +176,7 @@ class HomeContent extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: Text(
-                      '\${data.heroArtist.name} • \${data.heroDuration} • \${data.heroListeners}',
+                      '${data.heroArtist.name} • ${data.heroDuration} • ${data.heroListeners}',
                       style: GoogleFonts.inter(
                         color: Colors.black87, 
                         fontWeight: FontWeight.w700, 

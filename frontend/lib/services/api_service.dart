@@ -18,9 +18,16 @@ class ApiService {
         _client = client ?? http.Client();
 
   /// Search YouTube Music for songs matching [query].
-  Future<List<Track>> searchTracks(String query, {int limit = 20}) async {
-    final uri = Uri.parse('$baseUrl/api/v1/search')
-        .replace(queryParameters: {'q': query, 'limit': '$limit'});
+  Future<List<Track>> searchTracks(String query, {int limit = 20, String? filterMode}) async {
+    final Map<String, dynamic> qParams = {
+      'q': query, 
+      'limit': '$limit'
+    };
+    if (filterMode != null) {
+      qParams['filter'] = filterMode;
+    }
+    
+    final uri = Uri.parse('$baseUrl/api/v1/search').replace(queryParameters: qParams);
 
     final response = await _client.get(uri);
 

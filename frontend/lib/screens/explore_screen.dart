@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../main.dart';
@@ -11,7 +12,9 @@ import '../widgets/track_tile.dart';
 /// Explore screen — unified search for both songs and artists with live
 /// suggestions, plus artist directory (all songs by a selected artist).
 class ExploreScreen extends ConsumerStatefulWidget {
-  const ExploreScreen({super.key});
+  final String? initialFilter;
+
+  const ExploreScreen({super.key, this.initialFilter});
 
   @override
   ConsumerState<ExploreScreen> createState() => _ExploreScreenState();
@@ -21,6 +24,48 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   final _searchController = TextEditingController();
   final _focusNode = FocusNode();
   Timer? _debounce;
+  String? _searchFilter;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchFilter = widget.initialFilter;
+    
+    // Load default content immediately
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadDefaults();
+    });
+  }
+
+  // ─── Default Content Generator ──────────────────────────────────
+  
+  void _loadDefaults() {
+    final rand = Random();
+    String defaultQuery = '';
+
+    if (_searchFilter == 'podcasts') {
+      final podcastTopics = [
+        'comedy podcasts', 'tech podcasts', 'true crime podcasts', 
+        'business podcasts', 'history podcasts', 'interview podcasts'
+      ];
+      defaultQuery = podcastTopics[rand.nextInt(podcastTopics.length)];
+    } else if (_searchFilter == 'videos') {
+      final videoTopics = [
+        'live music videos', 'trending music videos', 'acoustic sessions',
+        'tiny desk concerts', 'pop music videos', 'rock music videos'
+      ];
+      defaultQuery = videoTopics[rand.nextInt(videoTopics.length)];
+    } else {
+      final generalTopics = [
+        'trending artists', 'top chart hits', 'discover weekly',
+        'new releases', 'global top 50', 'viral hits'
+      ];
+      defaultQuery = generalTopics[rand.nextInt(generalTopics.length)];
+    }
+
+    // Run the search silently in the background for defaults
+    _runSearch(defaultQuery, isDefaultContent: true);
+  }
 
   // Search results
   List<Artist> _artists = [];
@@ -49,11 +94,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   void _onSearchChanged(String query) {
     _debounce?.cancel();
     if (query.trim().isEmpty) {
-      setState(() {
-        _artists = [];
-        _songs = [];
-        _error = '';
-      });
+      _loadDefaults(); // Load random defaults instead of showing blank screen
       return;
     }
     setState(() {}); // Update suffix icon
@@ -62,10 +103,14 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     });
   }
 
-  Future<void> _runSearch(String query) async {
+  Future<void> _runSearch(String query, {bool isDefaultContent = false}) async {
     setState(() {
       _isSearching = true;
       _error = '';
+      if (!isDefaultContent) {
+        _artists = []; // Clear only if it is an active user search typing
+        _songs = [];
+      }
     });
 
     try {
@@ -73,7 +118,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
       // Fire both searches in parallel
       final results = await Future.wait([
         api.searchArtists(query, limit: 5),
-        api.searchTracks(query, limit: 10),
+        api.searchTracks(query, limit: 10, filterMode: _searchFilter),
       ]);
 
       if (mounted) {
@@ -142,8 +187,9 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
   void _clearAll() {
     _searchController.clear();
-    _onSearchChanged('');
+    _searchFilter = null;
     _clearArtist();
+    _loadDefaults();
   }
 
   // ─── Build ──────────────────────────────────────────────────────
@@ -192,6 +238,24 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
           ),
         ),
 
+        // ─── Filter Chips ─────────────────────────────────────────
+        if (_searchController.text.isNotEmpty || _searchFilter != null)
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+            child: Row(
+              children: [
+                _buildFilterChip('All', null),
+                const SizedBox(width: 8),
+                _buildFilterChip('Songs', 'songs'),
+                const SizedBox(width: 8),
+                _buildFilterChip('Podcasts', 'podcasts'),
+                const SizedBox(width: 8),
+                _buildFilterChip('Videos', 'videos'),
+              ],
+            ),
+          ),
+
         // ─── Content ──────────────────────────────────────────────
         Expanded(
           child: _selectedArtistName != null
@@ -199,6 +263,40 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
               : _buildSearchResults(currentTrack),
         ),
       ],
+    );
+  }
+
+  // ─── Filter Builder ─────────────────────────────────────────────
+
+  Widget _buildFilterChip(String label, String? filterValue) {
+    final isSelected = _searchFilter == filterValue;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _searchFilter = filterValue;
+          if (_searchController.text.isNotEmpty) {
+            _onSearchChanged(_searchController.text);
+          } else {
+            // Load new random defaults for the selected filter tab
+            _loadDefaults();
+          }
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? kAccent : Colors.white.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.black : kTextWhite,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
+        ),
+      ),
     );
   }
 
@@ -229,6 +327,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     }
 
     if (_artists.isEmpty && _songs.isEmpty) {
+      // Very unlikely to happen with auto-loading, but good fallback
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -244,12 +343,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 6),
-            const Text(
-              'Search by song name or artist to get\ninstant suggestions',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: kTextMuted, fontSize: 13, height: 1.5),
-            ),
           ],
         ),
       );
@@ -258,6 +351,23 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
       children: [
+        // ─── Header logic based on context ────────────────────────
+        if (_searchController.text.isEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(28, 0, 28, 16),
+            child: Text(
+              _searchFilter == 'podcasts' 
+                  ? 'Recommended Podcasts' 
+                  : _searchFilter == 'videos' 
+                      ? 'Trending Videos' 
+                      : 'Made for You',
+              style: const TextStyle(
+                fontSize: 18, 
+                fontWeight: FontWeight.w700, 
+                color: kTextWhite
+              ),
+            ),
+          ),
         // ─── Artists Section ──────────────────────────────────────
         if (_artists.isNotEmpty) ...[
           _SectionHeader(

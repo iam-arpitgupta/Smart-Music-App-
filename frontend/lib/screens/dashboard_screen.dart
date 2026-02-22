@@ -1,17 +1,23 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/premium_colors.dart';
+import '../providers/player_provider.dart';
 import 'home_content.dart';
+import 'explore_screen.dart';
+import 'smart_dj_chat.dart';
+import 'library_screen.dart';
+import 'now_playing_screen.dart';
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   int _selectedIndex = 0;
 
   @override
@@ -45,16 +51,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildBody() {
+    Widget page;
+    switch (_selectedIndex) {
+      case 0:
+        page = const HomeContent();
+        break;
+      case 1:
+        page = const ExploreScreen(key: ValueKey('explore_all'));
+        break;
+      case 2:
+        page = const ExploreScreen(
+            key: ValueKey('explore_podcasts'), initialFilter: 'podcasts');
+        break;
+      case 3:
+        page = const ExploreScreen(
+            key: ValueKey('explore_videos'), initialFilter: 'videos');
+        break;
+      case 4:
+        page = const SmartDJChat();
+        break;
+      case 5:
+        page = const LibraryScreen();
+        break;
+      default:
+        page = Center(
+          child: Text(
+            'Placeholder $_selectedIndex',
+            style: GoogleFonts.inter(color: kPremiumTextMuted, fontSize: 18),
+          ),
+        );
+    }
+
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 300),
-      child: _selectedIndex == 0 
-          ? const HomeContent()
-          : Center(
-              child: Text(
-                'Placeholder \$_selectedIndex',
-                style: GoogleFonts.inter(color: kPremiumTextMuted, fontSize: 18),
-              ),
-            ),
+      child: page,
     );
   }
 
@@ -78,13 +108,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: const Icon(Icons.waves_rounded, color: Colors.black, size: 28),
           ),
           const SizedBox(height: 50),
-          _sidebarIcon(Icons.home_filled, 0),
-          _sidebarIcon(Icons.music_note_rounded, 1),
-          _sidebarIcon(Icons.auto_awesome, 2),
-          _sidebarIcon(Icons.library_music_rounded, 3), // More appropriate than library_music
-          _sidebarIcon(Icons.favorite, 4),
-          const Spacer(),
-          _sidebarIcon(Icons.settings, 5),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _sidebarIcon(Icons.home_filled, 0),
+                  _sidebarIcon(Icons.search_rounded, 1),
+                  _sidebarIcon(Icons.podcasts_rounded, 2),
+                  _sidebarIcon(Icons.video_library_rounded, 3),
+                  _sidebarIcon(Icons.auto_awesome, 4),
+                  _sidebarIcon(Icons.library_music_rounded, 5),
+                ],
+              ),
+            ),
+          ),
+          _sidebarIcon(Icons.settings, 6),
           const SizedBox(height: 30),
         ],
       ),
@@ -120,7 +158,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       child: BottomNavigationBar(
         backgroundColor: kPremiumSidebar,
-        currentIndex: _selectedIndex > 4 ? 0 : _selectedIndex,
+        currentIndex: _selectedIndex > 5 ? 0 : _selectedIndex,
         selectedItemColor: kPremiumAccent,
         unselectedItemColor: kPremiumTextMuted,
         type: BottomNavigationBarType.fixed,
@@ -130,15 +168,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
         showUnselectedLabels: false,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_filled, size: 28), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.music_note_rounded, size: 28), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.search_rounded, size: 28), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.podcasts_rounded, size: 28), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.video_library_rounded, size: 28), label: ''),
           BottomNavigationBarItem(icon: Icon(Icons.auto_awesome, size: 28), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite, size: 28), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.library_music_rounded, size: 28), label: ''),
         ],
       ),
     );
   }
 
   Widget _buildPremiumPlayerBar() {
+    final track = ref.watch(currentTrackProvider);
+    if (track == null) return const SizedBox.shrink();
+
+    final isPlaying = ref.watch(playingStreamProvider).value ?? false;
+    final position = ref.watch(positionStreamProvider).value ?? Duration.zero;
+    final duration = ref.watch(durationStreamProvider).value ?? const Duration(milliseconds: 1);
+    final shuffle = ref.watch(shuffleProvider);
+    final repeatMode = ref.watch(repeatModeProvider); // 0=off, 1=all, 2=one
+
+    String formatDuration(Duration d) {
+      final min = d.inMinutes;
+      final sec = (d.inSeconds % 60).toString().padLeft(2, '0');
+      return '$min:$sec';
+    }
+
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
@@ -153,33 +208,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Track Info
-              Row(
-                children: [
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(28),
-                      // boxShadow: [kPremiumGlow(Colors.purple)],
-                      image: const DecorationImage(
-                        image: NetworkImage('https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80'),
-                        fit: BoxFit.cover,
+              Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NowPlayingScreen(),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    );
+                  },
+                  child: Row(
                     children: [
-                      Text('Waves & Amplifiers', 
-                        style: GoogleFonts.inter(color: kPremiumText, fontWeight: FontWeight.w700, fontSize: 16)),
-                      const SizedBox(height: 4),
-                      Text('Stella Hayes', 
-                        style: GoogleFonts.inter(color: kPremiumTextMuted, fontSize: 13, fontWeight: FontWeight.w500)),
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(28),
+                          image: track.thumbnail != null
+                              ? DecorationImage(
+                                  image: NetworkImage(track.thumbnail!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
+                        child: track.thumbnail == null ? const Icon(Icons.music_note, color: kPremiumTextMuted) : null,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(track.title, 
+                              maxLines: 1, overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.inter(color: kPremiumText, fontWeight: FontWeight.w700, fontSize: 16)),
+                            const SizedBox(height: 4),
+                            Text(track.artist, 
+                              maxLines: 1, overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.inter(color: kPremiumTextMuted, fontSize: 13, fontWeight: FontWeight.w500)),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
-                ],
+                ),
               ),
               
               // Player Controls
@@ -193,28 +267,60 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.shuffle_rounded, color: kPremiumTextMuted, size: 22),
-                            const SizedBox(width: 24),
-                            const Icon(Icons.skip_previous_rounded, color: kPremiumText, size: 28),
-                            const SizedBox(width: 24),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: const BoxDecoration(
-                                color: kPremiumText,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.pause_rounded, color: kPremiumBg, size: 24),
+                            IconButton(
+                              icon: Icon(Icons.shuffle_rounded, 
+                                color: shuffle ? kPremiumAccent : kPremiumTextMuted, size: 22),
+                              onPressed: () => ref.read(shuffleProvider.notifier).state = !shuffle,
                             ),
-                            const SizedBox(width: 24),
-                            const Icon(Icons.skip_next_rounded, color: kPremiumText, size: 28),
-                            const SizedBox(width: 24),
-                            const Icon(Icons.repeat_rounded, color: kPremiumTextMuted, size: 22),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(Icons.skip_previous_rounded, color: kPremiumText, size: 28),
+                              onPressed: () => skipPrevious(ref),
+                            ),
+                            const SizedBox(width: 8),
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(24),
+                                onTap: () {
+                                  if (isPlaying) {
+                                    audioHandler.pause();
+                                  } else {
+                                    audioHandler.play();
+                                  }
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: const BoxDecoration(
+                                    color: kPremiumText,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded, 
+                                    color: kPremiumBg, size: 24),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(Icons.skip_next_rounded, color: kPremiumText, size: 28),
+                              onPressed: () => skipNext(ref),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: Icon(
+                                repeatMode == 2 ? Icons.repeat_one_rounded : Icons.repeat_rounded, 
+                                color: repeatMode > 0 ? kPremiumAccent : kPremiumTextMuted, size: 22),
+                              onPressed: () {
+                                final current = ref.read(repeatModeProvider);
+                                ref.read(repeatModeProvider.notifier).state = (current + 1) % 3;
+                              },
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 4),
                         Row(
                           children: [
-                            Text('08:42', style: GoogleFonts.inter(color: kPremiumTextMuted, fontSize: 11, fontWeight: FontWeight.w600)),
+                            Text(formatDuration(position), style: GoogleFonts.inter(color: kPremiumTextMuted, fontSize: 11, fontWeight: FontWeight.w600)),
                             const SizedBox(width: 12),
                             Expanded(
                               child: SliderTheme(
@@ -226,11 +332,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   inactiveTrackColor: kPremiumBorder,
                                   thumbColor: kPremiumText,
                                 ),
-                                child: Slider(value: 0.5, onChanged: (val) {}),
+                                child: Slider(
+                                  value: (position.inMilliseconds / duration.inMilliseconds)
+                                      .clamp(0.0, 1.0), 
+                                  onChanged: (val) {
+                                    final newPosition = Duration(milliseconds: (val * duration.inMilliseconds).round());
+                                    audioHandler.seek(newPosition);
+                                  },
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),
-                            Text('17:24', style: GoogleFonts.inter(color: kPremiumTextMuted, fontSize: 11, fontWeight: FontWeight.w600)),
+                            Text(formatDuration(duration), style: GoogleFonts.inter(color: kPremiumTextMuted, fontSize: 11, fontWeight: FontWeight.w600)),
                           ],
                         ),
                       ],
@@ -242,9 +355,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
               if (MediaQuery.of(context).size.width > 600)
                 Row(
                   children: [
-                    const Icon(Icons.favorite_rounded, color: kPremiumTextMuted, size: 24),
-                    const SizedBox(width: 20),
-                    const Icon(Icons.menu_rounded, color: kPremiumTextMuted, size: 24),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () {},
+                        child: const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Icon(Icons.favorite_rounded, color: kPremiumTextMuted, size: 24),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () {},
+                        child: const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Icon(Icons.menu_rounded, color: kPremiumTextMuted, size: 24),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
             ],
