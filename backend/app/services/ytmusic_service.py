@@ -35,8 +35,8 @@ def search(query: str, limit: int = 20, filter: str | None = "songs") -> list[Se
 
         results.append(
             SearchResult(
-                video_id=item.get("videoId", ""),
-                title=item.get("title", ""),
+                video_id=item.get("videoId") or "",
+                title=item.get("title") or "",
                 artist=artist_name,
                 thumbnail=thumbnail_url,
                 duration=duration_text,

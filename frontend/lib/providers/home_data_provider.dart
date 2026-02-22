@@ -10,6 +10,7 @@ class HomeData {
   final String heroDuration;
   final String heroListeners;
   final String heroImageUrl;
+  final List<Track> heroSongs;
   final List<Track> madeForYou;
   final List<Track> popularSpeckers;
 
@@ -19,6 +20,7 @@ class HomeData {
     required this.heroDuration,
     required this.heroListeners,
     required this.heroImageUrl,
+    required this.heroSongs,
     required this.madeForYou,
     required this.popularSpeckers,
   });
@@ -60,12 +62,25 @@ final homeDataProvider = FutureProvider<HomeData>((ref) async {
         ? shuffledArtists.first 
         : const Artist(browseId: '', name: 'TOP CHARTS', thumbnail: 'https://images.unsplash.com/photo-1493225457124-a1a2a4f4e1f7?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80', subscribers: 'Millions of Listeners');
 
+    List<Track> heroSongs = [];
+    if (hero.browseId.isNotEmpty) {
+      try {
+        final detail = await api.getArtistDetail(hero.browseId);
+        heroSongs = (detail['songs'] as List<dynamic>).cast<Track>();
+      } catch (_) {
+        heroSongs = tracks; // Fallback to trending tracks
+      }
+    } else {
+      heroSongs = tracks;
+    }
+
     return HomeData(
       heroArtist: hero,
       heroAlbum: randomAlbum,
       heroDuration: 'Various Playlists',
       heroListeners: hero.subscribers ?? 'Millions of Listeners',
       heroImageUrl: hero.thumbnail ?? 'https://images.unsplash.com/photo-1493225457124-a1a2a4f4e1f7?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+      heroSongs: heroSongs,
       madeForYou: tracks,
       popularSpeckers: artists.map((a) => Track(
         videoId: '', // Representing an artist here, no direct audio videoId

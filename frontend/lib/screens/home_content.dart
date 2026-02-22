@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart'; // Added this import
 
 import '../theme/premium_colors.dart';
 import '../providers/home_data_provider.dart';
@@ -210,8 +211,8 @@ class HomeContent extends ConsumerWidget {
                   
                   _PremiumButton(
                     onTap: () {
-                      if (data.madeForYou.isNotEmpty) {
-                        playTrackWithQueue(ref, data.madeForYou.first, data.madeForYou);
+                      if (data.heroSongs.isNotEmpty) {
+                        playTrackWithQueue(ref, data.heroSongs.first, data.heroSongs);
                       }
                     },
                     label: 'Start Playing',
@@ -298,6 +299,23 @@ class HomeContent extends ConsumerWidget {
                   ],
                 ),
               ),
+              // Download button
+              IconButton(
+                icon: const Icon(Icons.download_rounded, color: kPremiumTextMuted, size: 24),
+                onPressed: () async {
+                  final api = ref.read(apiServiceProvider);
+                  final downloadUrl = api.getDownloadUrl(track.videoId);
+                  final uri = Uri.parse(downloadUrl);
+                  try {
+                     await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  } catch (e) {
+                      debugPrint('Could not launch \$downloadUrl: \$e');
+                  }
+                },
+                tooltip: 'Download Track',
+              ),
+              const SizedBox(width: 8),
+
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(

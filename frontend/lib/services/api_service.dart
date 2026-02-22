@@ -136,6 +136,12 @@ class ApiService {
     return data['stream_url'] as String;
   }
 
+  /// Get the proxy download URL for a [videoId].
+  /// Opening this URL will force the browser to securely download the file natively.
+  String getDownloadUrl(String videoId) {
+    return '$baseUrl/api/v1/download/$videoId';
+  }
+
   /// Convert a Google CDN thumbnail URL into a proxied backend URL.
   String thumbnailProxyUrl(String originalUrl) {
     return '$baseUrl/api/v1/thumbnail?url=${Uri.encodeComponent(originalUrl)}';

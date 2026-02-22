@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
 import '../models/track.dart';
+import '../providers/player_provider.dart';
 
 /// Resonance-style track tile for list views.
-class TrackTile extends StatefulWidget {
+class TrackTile extends ConsumerStatefulWidget {
   final Track track;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
@@ -18,10 +21,10 @@ class TrackTile extends StatefulWidget {
   });
 
   @override
-  State<TrackTile> createState() => _TrackTileState();
+  ConsumerState<TrackTile> createState() => _TrackTileState();
 }
 
-class _TrackTileState extends State<TrackTile> {
+class _TrackTileState extends ConsumerState<TrackTile> {
   bool _hovered = false;
 
   @override
@@ -87,6 +90,28 @@ class _TrackTileState extends State<TrackTile> {
                   ],
                 ),
               ),
+
+              // Download button
+              IconButton(
+                icon: const Icon(Icons.download_rounded, color: kTextMuted, size: 20),
+                onPressed: () async {
+                  final api = ref.read(apiServiceProvider);
+                  final downloadUrl = api.getDownloadUrl(widget.track.videoId);
+                  final uri = Uri.parse(downloadUrl);
+                  try {
+                     await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  } catch (e) {
+                      debugPrint('Could not launch \$downloadUrl: \$e');
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Could not download track: \$e')),
+                        );
+                      }
+                  }
+                },
+                tooltip: 'Download Track',
+              ),
+              const SizedBox(width: 8),
 
               // Play button
               Container(

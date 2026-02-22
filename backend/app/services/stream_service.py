@@ -15,7 +15,7 @@ from app.schemas import StreamResponse
 
 # yt-dlp options: extract info only, select best audio, no download.
 _YDL_OPTS: dict = {
-    "format": "bestaudio/best",
+    "format": "m4a/bestaudio/best",
     "quiet": True,
     "no_warnings": True,
     "extract_flat": False,
