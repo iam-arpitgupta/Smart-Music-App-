@@ -140,10 +140,10 @@ class _SmartDJChatState extends ConsumerState<SmartDJChat> {
         decoration: BoxDecoration(
           color: const Color(0xFF1A1A2E),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: kAccent.withValues(alpha: 0.2)),
+          border: Border.all(color: kAccent.withOpacity(0.2)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.5),
+              color: Colors.black.withOpacity(0.5),
               blurRadius: 40,
               offset: const Offset(0, 16),
             ),
@@ -196,7 +196,7 @@ class _SmartDJChatState extends ConsumerState<SmartDJChat> {
       padding: const EdgeInsets.fromLTRB(20, 16, 12, 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [kAccent.withValues(alpha: 0.12), Colors.transparent],
+          colors: [kAccent.withOpacity(0.12), Colors.transparent],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -209,7 +209,7 @@ class _SmartDJChatState extends ConsumerState<SmartDJChat> {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: kAccent.withValues(alpha: 0.2),
+              color: kAccent.withOpacity(0.2),
             ),
             child: const Icon(Icons.auto_awesome, color: kAccent, size: 20),
           ),
@@ -249,7 +249,7 @@ class _SmartDJChatState extends ConsumerState<SmartDJChat> {
             child: Container(
               height: 44,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.06),
+                color: Colors.white.withOpacity(0.06),
                 borderRadius: BorderRadius.circular(22),
               ),
               child: TextField(
@@ -260,7 +260,7 @@ class _SmartDJChatState extends ConsumerState<SmartDJChat> {
                 decoration: InputDecoration(
                   hintText: 'Tell me your mood...',
                   hintStyle: TextStyle(
-                      color: kTextMuted.withValues(alpha: 0.5), fontSize: 13),
+                      color: kTextMuted.withOpacity(0.5), fontSize: 13),
                   border: InputBorder.none,
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -277,7 +277,7 @@ class _SmartDJChatState extends ConsumerState<SmartDJChat> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: _isSending ? kAccent.withValues(alpha: 0.4) : kAccent,
+                  color: _isSending ? kAccent.withOpacity(0.4) : kAccent,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.arrow_upward_rounded,
@@ -313,8 +313,8 @@ class _SmartDJChatState extends ConsumerState<SmartDJChat> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: isUser
-                  ? kAccent.withValues(alpha: 0.2)
-                  : Colors.white.withValues(alpha: 0.06),
+                  ? kAccent.withOpacity(0.2)
+                  : Colors.white.withOpacity(0.06),
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(16),
                 topRight: const Radius.circular(16),
@@ -415,7 +415,7 @@ class _SmartDJChatState extends ConsumerState<SmartDJChat> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: kAccent.withValues(alpha: 0.15),
+            color: kAccent.withOpacity(0.15),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
@@ -451,8 +451,8 @@ class _SmartDJChatState extends ConsumerState<SmartDJChat> {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               color: isPlaying
-                  ? kAccent.withValues(alpha: 0.12)
-                  : Colors.white.withValues(alpha: 0.04),
+                  ? kAccent.withOpacity(0.12)
+                  : Colors.white.withOpacity(0.04),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
@@ -521,7 +521,7 @@ class _SmartDJChatState extends ConsumerState<SmartDJChat> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.06),
+            color: Colors.white.withOpacity(0.06),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(16),
               topRight: Radius.circular(16),

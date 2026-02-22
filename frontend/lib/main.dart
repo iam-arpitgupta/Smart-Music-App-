@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'providers/player_provider.dart';
 import 'services/audio_handler.dart';
-import 'screens/app_shell.dart';
+import 'screens/dashboard_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -71,7 +71,7 @@ class _MusicAppState extends ConsumerState<MusicApp> {
       title: 'Resonance',
       debugShowCheckedModeBanner: false,
       theme: _buildTheme(),
-      home: const AppShell(),
+      home: const DashboardScreen(),
     );
   }
 
@@ -117,7 +117,7 @@ class _MusicAppState extends ConsumerState<MusicApp> {
         activeTrackColor: kAccent,
         inactiveTrackColor: kDivider,
         thumbColor: kAccent,
-        overlayColor: kAccent.withValues(alpha: 0.15),
+        overlayColor: kAccent.withOpacity(0.15),
         trackHeight: 3,
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
       ),

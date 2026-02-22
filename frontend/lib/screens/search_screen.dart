@@ -66,15 +66,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 decoration: InputDecoration(
                   hintText: 'What do you want to listen to?',
                   hintStyle: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.35),
+                    color: Colors.white.withOpacity(0.35),
                     fontWeight: FontWeight.w400,
                   ),
                   prefixIcon: Icon(Icons.search_rounded,
-                      color: Colors.white.withValues(alpha: 0.5)),
+                      color: Colors.white.withOpacity(0.5)),
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
                           icon: Icon(Icons.clear_rounded,
-                              color: Colors.white.withValues(alpha: 0.5)),
+                              color: Colors.white.withOpacity(0.5)),
                           onPressed: () {
                             _searchController.clear();
                             ref.read(searchQueryProvider.notifier).state = '';
@@ -118,7 +118,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.5),
+                              color: Colors.white.withOpacity(0.5),
                             ),
                           ),
                         ],
@@ -132,12 +132,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             children: [
                               Icon(Icons.search_off_rounded,
                                   size: 64,
-                                  color: Colors.white.withValues(alpha: 0.2)),
+                                  color: Colors.white.withOpacity(0.2)),
                               const SizedBox(height: 12),
                               Text(
                                 'No results found',
                                 style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.5),
+                                  color: Colors.white.withOpacity(0.5),
                                 ),
                               ),
                             ],
@@ -197,7 +197,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w700,
-              color: Colors.white.withValues(alpha: 0.9),
+              color: Colors.white.withOpacity(0.9),
             ),
           ),
         ),

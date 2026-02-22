@@ -8,16 +8,13 @@ import '../models/track.dart';
 /// For Android emulator, 10.0.2.2 maps to the host machine's localhost.
 /// Change [baseUrl] to your machine's LAN IP when testing on a physical device.
 class ApiService {
-  // ignore: constant_identifier_names
-  // Use localhost for web/desktop testing.
-  // Change to http://10.0.2.2:8000 for Android emulator.
-  static const String _DEFAULT_BASE = 'http://localhost:8000';
+  static const String _defaultBase = 'http://localhost:8000';
 
   final String baseUrl;
   final http.Client _client;
 
   ApiService({String? baseUrl, http.Client? client})
-      : baseUrl = baseUrl ?? _DEFAULT_BASE,
+      : baseUrl = baseUrl ?? _defaultBase,
         _client = client ?? http.Client();
 
   /// Search YouTube Music for songs matching [query].

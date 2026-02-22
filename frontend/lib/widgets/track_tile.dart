@@ -39,7 +39,7 @@ class _TrackTileState extends State<TrackTile> {
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: _hovered
-                ? Colors.white.withValues(alpha: 0.06)
+                ? Colors.white.withOpacity(0.06)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
@@ -55,7 +55,7 @@ class _TrackTileState extends State<TrackTile> {
                       ? Image.network(
                           widget.track.thumbnail!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => _placeholder(),
+                          errorBuilder: (_, __, ___) => _placeholder(),
                         )
                       : _placeholder(),
                 ),

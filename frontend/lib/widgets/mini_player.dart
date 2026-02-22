@@ -52,7 +52,7 @@ class MiniPlayer extends ConsumerWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
+              color: Colors.black.withOpacity(0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -75,7 +75,7 @@ class MiniPlayer extends ConsumerWidget {
                           ? Image.network(
                               track.thumbnail!,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, _, _) => Container(
+                              errorBuilder: (_, __, ___) => Container(
                                 color: const Color(0xFF2A2A2A),
                                 child: const Icon(Icons.music_note, size: 20),
                               ),
@@ -111,7 +111,7 @@ class MiniPlayer extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 11,
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: Colors.white.withOpacity(0.5),
                           ),
                         ),
                       ],
@@ -155,7 +155,7 @@ class MiniPlayer extends ConsumerWidget {
                 child: LinearProgressIndicator(
                   value: progress.clamp(0.0, 1.0),
                   minHeight: 2.5,
-                  backgroundColor: Colors.white.withValues(alpha: 0.08),
+                  backgroundColor: Colors.white.withOpacity(0.08),
                   valueColor: AlwaysStoppedAnimation(accent),
                 ),
               ),
