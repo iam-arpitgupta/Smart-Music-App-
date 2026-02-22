@@ -63,7 +63,7 @@ class BottomPlayer extends ConsumerWidget {
                                   ? Image.network(
                                       track.thumbnail!,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, _, _) =>
+                                      errorBuilder: (_, __, ___) =>
                                           _artPlaceholder(),
                                     )
                                   : _artPlaceholder(),

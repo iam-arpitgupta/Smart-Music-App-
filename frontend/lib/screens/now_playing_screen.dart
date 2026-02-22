@@ -103,7 +103,7 @@ class NowPlayingScreen extends ConsumerWidget {
                       ? Image.network(
                           track.thumbnail!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => _placeholder(),
+                          errorBuilder: (_, __, ___) => _placeholder(),
                           loadingBuilder: (_, child, prog) {
                             if (prog == null) return child;
                             return _placeholder();

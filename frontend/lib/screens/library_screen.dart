@@ -156,7 +156,7 @@ class LibraryScreen extends ConsumerWidget {
                                   color: Colors.white.withOpacity(0.5),
                                 ),
                               ),
-                              error: (_, _) => Text(
+                              error: (_, __) => Text(
                                 '0 songs',
                                 style: TextStyle(
                                   fontSize: 13,

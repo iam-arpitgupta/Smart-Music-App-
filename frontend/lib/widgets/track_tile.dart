@@ -55,7 +55,7 @@ class _TrackTileState extends State<TrackTile> {
                       ? Image.network(
                           widget.track.thumbnail!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => _placeholder(),
+                          errorBuilder: (_, __, ___) => _placeholder(),
                         )
                       : _placeholder(),
                 ),

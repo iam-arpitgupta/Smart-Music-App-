@@ -10,7 +10,7 @@ import '../models/track.dart';
 import '../widgets/skeleton_loader.dart';
 
 class HomeContent extends ConsumerWidget {
-  const HomeContent({Key? key}) : super(key: key);
+  const HomeContent({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -243,13 +243,13 @@ class HomeContent extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 24),
-        ...tracks.map((track) {
+            ...tracks.map((track) {
           final isPlaying = currentTrack?.videoId == track.videoId;
           return Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: _buildTrackItem(ref, track, tracks, isPlaying: isPlaying),
           );
-        }).toList(),
+        }),
       ],
     );
   }

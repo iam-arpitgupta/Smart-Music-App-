@@ -299,7 +299,7 @@ class _EffectSection extends StatelessWidget {
               Switch(
                 value: enabled,
                 onChanged: available ? onToggle : null,
-                activeThumbColor: kAccent,
+                activeColor: kAccent,
                 activeTrackColor: kAccent.withOpacity(0.3),
                 inactiveThumbColor: const Color(0xFF555555),
                 inactiveTrackColor: const Color(0xFF333333),

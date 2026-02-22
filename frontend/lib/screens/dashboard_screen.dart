@@ -5,7 +5,7 @@ import '../theme/premium_colors.dart';
 import 'home_content.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({Key? key}) : super(key: key);
+  const DashboardScreen({super.key});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -144,7 +144,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           height: 100,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
           decoration: BoxDecoration(
             color: kPremiumCard.withOpacity(0.85),
             border: const Border(top: BorderSide(color: kPremiumBorder, width: 1)),
@@ -186,7 +186,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               if (MediaQuery.of(context).size.width > 600)
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -239,13 +239,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 
               // Actions
-              Row(
-                children: [
-                  const Icon(Icons.favorite_rounded, color: kPremiumTextMuted, size: 24),
-                  const SizedBox(width: 20),
-                  const Icon(Icons.menu_rounded, color: kPremiumTextMuted, size: 24),
-                ],
-              ),
+              if (MediaQuery.of(context).size.width > 600)
+                Row(
+                  children: [
+                    const Icon(Icons.favorite_rounded, color: kPremiumTextMuted, size: 24),
+                    const SizedBox(width: 20),
+                    const Icon(Icons.menu_rounded, color: kPremiumTextMuted, size: 24),
+                  ],
+                ),
             ],
           ),
         ),

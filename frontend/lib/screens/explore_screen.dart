@@ -334,7 +334,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                             ? Image.network(
                                 _selectedArtistThumb!,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, _, _) =>
+                                errorBuilder: (_, __, ___) =>
                                     _avatarPlaceholder(),
                               )
                             : _avatarPlaceholder(),
@@ -604,7 +604,7 @@ class _ArtistTileState extends State<_ArtistTile> {
                       ? Image.network(
                           widget.artist.thumbnail!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => _placeholder(),
+                          errorBuilder: (_, __, ___) => _placeholder(),
                         )
                       : _placeholder(),
                 ),

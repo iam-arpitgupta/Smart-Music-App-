@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/track.dart';
 import '../models/artist.dart';
+import '../providers/player_provider.dart';
 
 class HomeData {
   final Artist heroArtist;
@@ -22,7 +23,6 @@ class HomeData {
   });
 }
 
-import '../providers/player_provider.dart';
 
 // Inject the repository class that makes HTTP calls.
 final homeDataProvider = FutureProvider<HomeData>((ref) async {

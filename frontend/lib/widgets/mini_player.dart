@@ -75,7 +75,7 @@ class MiniPlayer extends ConsumerWidget {
                           ? Image.network(
                               track.thumbnail!,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, _, _) => Container(
+                              errorBuilder: (_, __, ___) => Container(
                                 color: const Color(0xFF2A2A2A),
                                 child: const Icon(Icons.music_note, size: 20),
                               ),
