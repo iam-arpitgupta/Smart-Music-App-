@@ -146,5 +146,21 @@ class ApiService {
   String thumbnailProxyUrl(String originalUrl) {
     return '$baseUrl/api/v1/thumbnail?url=${Uri.encodeComponent(originalUrl)}';
   }
+
+  /// Get lyrics for a specific [videoId].
+  Future<String?> getLyrics(String videoId) async {
+    try {
+      final uri = Uri.parse('$baseUrl/api/v1/lyrics/$videoId');
+      final response = await _client.get(uri);
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['lyrics'] as String?;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
 }
 

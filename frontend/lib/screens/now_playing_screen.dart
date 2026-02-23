@@ -5,7 +5,9 @@ import 'package:palette_generator/palette_generator.dart';
 import '../main.dart';
 import '../providers/player_provider.dart';
 import '../widgets/rotating_glowing_border.dart';
+import '../widgets/smooth_button.dart';
 import '../screens/artist_screen.dart';
+import '../providers/sleep_timer_provider.dart';
 
 class NowPlayingScreen extends ConsumerStatefulWidget {
   const NowPlayingScreen({super.key});
@@ -75,6 +77,10 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
         ref.watch(bufferedPositionStreamProvider).valueOrNull ?? Duration.zero;
     final shuffle = ref.watch(shuffleProvider);
     final repeatMode = ref.watch(repeatModeProvider);
+    final sleepTimer = ref.watch(sleepTimerProvider);
+    
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 800;
 
     if (track == null) {
       return Scaffold(
@@ -124,25 +130,37 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.keyboard_arrow_down_rounded,
-                            size: 32),
+                      SmoothButton(
+                      onTap: () => Navigator.pop(context),
+                      child: const Icon(Icons.keyboard_arrow_down_rounded,
+                          size: 32, color: kTextWhite),
+                    ),
+                    const Text(
+                      'Now Playing',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                         color: kTextWhite,
-                        onPressed: () => Navigator.pop(context),
                       ),
-                      const Text(
-                        'Now Playing',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: kTextWhite,
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SmoothButton(
+                          onTap: () {
+                            _showSleepTimerMenu(context, ref, sleepTimer);
+                          },
+                          child: Icon(Icons.bedtime_outlined, 
+                            color: sleepTimer.mode != SleepTimerMode.off ? kAccent : kTextWhite),
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.more_vert_rounded),
-                        color: kTextWhite,
-                        onPressed: () {},
-                      ),
+                        SmoothButton(
+                          onTap: () {
+                            // TODO: Toggle Real-Time Lyrics view
+                          },
+                          child: const Icon(Icons.lyrics_outlined, color: kTextWhite),
+                        ),
+                      ],
+                    ),
                     ],
                   ),
                 ),
@@ -151,8 +169,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
 
                 // Album art (Keep near the top/center)
                 Container(
-                  width: 300,
-                  height: 300,
+                  width: isMobile ? screenWidth * 0.75 : 300.0,
+                  height: isMobile ? screenWidth * 0.75 : 300.0,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
@@ -226,7 +244,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                 // 3. The Glass Pill Implementation
                 // Distinct bottom container for controls, visually floating from edges
                 Padding(
-                  padding: const EdgeInsets.all(24.0),
+                  padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(40.0),
                     child: BackdropFilter(
@@ -294,94 +312,62 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
                                 // Shuffle
-                                Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(24),
-                                    onTap: () {
-                                      ref.read(shuffleProvider.notifier).state = !shuffle;
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(12),
-                                      child: Icon(Icons.shuffle_rounded,
-                                          color: shuffle ? Colors.white : Colors.white54, size: 22),
-                                    ),
-                                  ),
+                                SmoothButton(
+                                  onTap: () {
+                                    ref.read(shuffleProvider.notifier).state = !shuffle;
+                                  },
+                                  child: Icon(Icons.shuffle_rounded,
+                                      color: shuffle ? Colors.white : Colors.white54, size: 26),
                                 ),
                                 // Skip previous
-                                Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(24),
-                                    onTap: () => skipPrevious(ref),
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(8),
-                                      child: Icon(Icons.skip_previous_rounded,
-                                          color: Colors.white, size: 36),
-                                    ),
-                                  ),
+                                SmoothButton(
+                                  onTap: () => skipPrevious(ref),
+                                  child: const Icon(Icons.skip_previous_rounded,
+                                      color: Colors.white, size: 36),
                                 ),
                                 // Play/Pause
-                                Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(32),
-                                    onTap: () => isPlaying
-                                        ? audioHandler.pause()
-                                        : audioHandler.play(),
-                                    child: RotatingGlowingBorder(
-                                      isPlayingStream: audioHandler.playbackState.map((state) => state.playing),
-                                      borderWidth: 3.0,
-                                      child: Container(
-                                        width: 64,
-                                        height: 64,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.white.withOpacity(0.9),
-                                        ),
-                                        child: Icon(
-                                          isPlaying
-                                              ? Icons.pause_rounded
-                                              : Icons.play_arrow_rounded,
-                                          size: 34,
-                                          color: Colors.black,
-                                        ),
+                                SmoothButton(
+                                  onTap: () => isPlaying
+                                      ? audioHandler.pause()
+                                      : audioHandler.play(),
+                                  child: RotatingGlowingBorder(
+                                    isPlayingStream: audioHandler.playbackState.map((state) => state.playing),
+                                    borderWidth: 3.0,
+                                    child: Container(
+                                      width: 64,
+                                      height: 64,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.white.withOpacity(0.9),
+                                      ),
+                                      child: Icon(
+                                        isPlaying
+                                            ? Icons.pause_rounded
+                                            : Icons.play_arrow_rounded,
+                                        size: 34,
+                                        color: Colors.black,
                                       ),
                                     ),
                                   ),
                                 ),
                                 // Skip next
-                                Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(24),
-                                    onTap: () => skipNext(ref),
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(8),
-                                      child: Icon(Icons.skip_next_rounded,
-                                          color: Colors.white, size: 36),
-                                    ),
-                                  ),
+                                SmoothButton(
+                                  onTap: () => skipNext(ref),
+                                  child: const Icon(Icons.skip_next_rounded,
+                                      color: Colors.white, size: 36),
                                 ),
                                 // Repeat
-                                Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(24),
-                                    onTap: () {
-                                      ref.read(repeatModeProvider.notifier).state =
-                                          (repeatMode + 1) % 3;
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(12),
-                                      child: Icon(
-                                        repeatMode == 2
-                                            ? Icons.repeat_one_rounded
-                                            : Icons.repeat_rounded,
-                                        color: repeatMode > 0 ? Colors.white : Colors.white54,
-                                        size: 22,
-                                      ),
-                                    ),
+                                SmoothButton(
+                                  onTap: () {
+                                    ref.read(repeatModeProvider.notifier).state =
+                                        (repeatMode + 1) % 3;
+                                  },
+                                  child: Icon(
+                                    repeatMode == 2
+                                        ? Icons.repeat_one_rounded
+                                        : Icons.repeat_rounded,
+                                    color: repeatMode > 0 ? Colors.white : Colors.white54,
+                                    size: 26,
                                   ),
                                 ),
                               ],
@@ -408,6 +394,89 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
       child: const Center(
         child: Icon(Icons.music_note_rounded, size: 60, color: kTextMuted),
       ),
+    );
+  }
+
+  void _showSleepTimerMenu(BuildContext context, WidgetRef ref, SleepTimerState currentTimer) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext sheetContext) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 24),
+          decoration: BoxDecoration(
+            color: kCardDark,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Sleep Timer',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: kTextWhite,
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (currentTimer.mode != SleepTimerMode.off) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.timer_outlined, color: kAccent, size: 18),
+                      const SizedBox(width: 12),
+                      Text(
+                        currentTimer.mode == SleepTimerMode.endOfTrack
+                            ? 'Stops after current song'
+                            : 'Stops in ${currentTimer.remainingTime?.inMinutes}m ${(currentTimer.remainingTime?.inSeconds ?? 0) % 60}s',
+                        style: const TextStyle(color: kAccent, fontWeight: FontWeight.w600),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () {
+                          ref.read(sleepTimerProvider.notifier).cancelTimer();
+                          Navigator.pop(sheetContext);
+                        },
+                        child: const Text('Turn Off', style: TextStyle(color: Colors.redAccent)),
+                      ),
+                    ],
+                  ),
+                ),
+                Divider(color: kDivider),
+              ],
+              _buildTimerOption(sheetContext, ref, 'End of track', SleepTimerMode.endOfTrack, currentTimer.mode),
+              _buildTimerOption(sheetContext, ref, '15 minutes', SleepTimerMode.minutes15, currentTimer.mode),
+              _buildTimerOption(sheetContext, ref, '30 minutes', SleepTimerMode.minutes30, currentTimer.mode),
+              _buildTimerOption(sheetContext, ref, '45 minutes', SleepTimerMode.minutes45, currentTimer.mode),
+              _buildTimerOption(sheetContext, ref, '1 hour', SleepTimerMode.hour1, currentTimer.mode),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTimerOption(BuildContext context, WidgetRef ref, String label, SleepTimerMode targetedMode, SleepTimerMode currentMode) {
+    final isSelected = targetedMode == currentMode;
+    return ListTile(
+      title: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? kAccent : kTextWhite,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+        ),
+      ),
+      trailing: isSelected ? const Icon(Icons.check_rounded, color: kAccent) : null,
+      onTap: () {
+        ref.read(sleepTimerProvider.notifier).setTimer(targetedMode);
+        Navigator.pop(context);
+      },
     );
   }
 }

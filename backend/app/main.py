@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 load_dotenv()  # reads backend/.env into os.environ
 
 
-from app.routers import dj_agent, search, stream, thumbnail
+from app.routers import dj_agent, search, stream, thumbnail, lyrics
 
 app = FastAPI(
     title="Music App API",
@@ -39,6 +39,7 @@ app.add_middleware(
 app.include_router(search.router, prefix="/api/v1", tags=["Search"])
 app.include_router(stream.router, prefix="/api/v1", tags=["Stream"])
 app.include_router(thumbnail.router, prefix="/api/v1", tags=["Thumbnail"])
+app.include_router(lyrics.router, prefix="/api/v1", tags=["Lyrics"])
 app.include_router(dj_agent.chat_router, prefix="/api/v1", tags=["Smart DJ"])
 
 

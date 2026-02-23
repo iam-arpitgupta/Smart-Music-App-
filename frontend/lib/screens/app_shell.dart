@@ -16,8 +16,27 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedTab = ref.watch(selectedTabProvider);
+    final isMobile = MediaQuery.of(context).size.width < 800;
 
     return Scaffold(
+      backgroundColor: Colors.black, // Backup for mobile sizing
+      bottomNavigationBar: isMobile
+          ? BottomNavigationBar(
+              currentIndex: selectedTab,
+              onTap: (i) => ref.read(selectedTabProvider.notifier).state = i,
+              backgroundColor: kSidebar,
+              selectedItemColor: kAccent,
+              unselectedItemColor: kTextMuted,
+              items: const [
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.home_rounded), label: 'Home'),
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.explore_rounded), label: 'Explore'),
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.library_music_rounded), label: 'Library'),
+              ],
+            )
+          : null,
       body: Stack(
         children: [
           // ─── Dynamic gradient background ─────────────────────
@@ -39,11 +58,12 @@ class AppShell extends ConsumerWidget {
                 child: Row(
                   children: [
                     // ─── Left Sidebar ──────────────────────────
-                    _Sidebar(
-                      selectedIndex: selectedTab,
-                      onItemSelected: (i) =>
-                          ref.read(selectedTabProvider.notifier).state = i,
-                    ),
+                    if (!isMobile)
+                      _Sidebar(
+                        selectedIndex: selectedTab,
+                        onItemSelected: (i) =>
+                            ref.read(selectedTabProvider.notifier).state = i,
+                      ),
 
                     // ─── Main Content Area ─────────────────────
                     Expanded(
