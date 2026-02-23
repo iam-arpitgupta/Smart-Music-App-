@@ -4,6 +4,7 @@ import '../main.dart';
 import '../providers/player_provider.dart';
 import '../screens/now_playing_screen.dart';
 import 'effects_bottom_sheet.dart';
+import 'animated_glowing_border.dart';
 
 /// Full-width bottom player bar: Now Playing | Controls + Slider | Volume
 class BottomPlayer extends ConsumerWidget {
@@ -139,25 +140,30 @@ class BottomPlayer extends ConsumerWidget {
                           ),
                           const SizedBox(width: 4),
                           // Play / Pause
-                          GestureDetector(
-                            onTap: () {
-                              isPlaying
-                                  ? audioHandler.pause()
-                                  : audioHandler.play();
-                            },
-                            child: Container(
-                              width: 36,
-                              height: 36,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: kAccent,
-                              ),
-                              child: Icon(
+                          AnimatedGlowingBorder(
+                            isPlaying: isPlaying,
+                            borderWidth: 2.0,
+                            borderRadius: 18.0,
+                            child: GestureDetector(
+                              onTap: () {
                                 isPlaying
-                                    ? Icons.pause_rounded
-                                    : Icons.play_arrow_rounded,
-                                size: 22,
-                                color: Colors.black,
+                                    ? audioHandler.pause()
+                                    : audioHandler.play();
+                              },
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: kAccent,
+                                ),
+                                child: Icon(
+                                  isPlaying
+                                      ? Icons.pause_rounded
+                                      : Icons.play_arrow_rounded,
+                                  size: 22,
+                                  color: Colors.black,
+                                ),
                               ),
                             ),
                           ),

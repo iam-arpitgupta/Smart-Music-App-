@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../main.dart';
 import '../providers/player_provider.dart';
+import '../widgets/animated_glowing_border.dart';
 
 class NowPlayingScreen extends ConsumerWidget {
   const NowPlayingScreen({super.key});
@@ -222,24 +223,29 @@ class NowPlayingScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(32),
                       onTap: () =>
                           isPlaying ? audioHandler.pause() : audioHandler.play(),
-                      child: Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: kAccent,
-                          boxShadow: [
-                            BoxShadow(
-                              color: kAccent.withOpacity(0.3),
-                              blurRadius: 16,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                          size: 34,
-                          color: Colors.black,
+                      child: AnimatedGlowingBorder(
+                        isPlaying: isPlaying,
+                        borderRadius: 32.0,
+                        borderWidth: 3.0,
+                        child: Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: kAccent,
+                            boxShadow: [
+                              BoxShadow(
+                                color: kAccent.withOpacity(0.3),
+                                blurRadius: 16,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                            size: 34,
+                            color: Colors.black,
+                          ),
                         ),
                       ),
                     ),
