@@ -1,10 +1,13 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../main.dart';
 import '../providers/player_provider.dart';
+import '../screens/now_playing_screen.dart';
 import '../screens/artist_screen.dart';
 import 'effects_bottom_sheet.dart';
 import 'rotating_glowing_border.dart';
+import 'dynamic_glass_panel.dart';
 
 /// Full-width bottom player bar: Now Playing | Controls + Slider | Volume
 class BottomPlayer extends ConsumerWidget {
@@ -27,13 +30,13 @@ class BottomPlayer extends ConsumerWidget {
     final shuffle = ref.watch(shuffleProvider);
     final repeatMode = ref.watch(repeatModeProvider);
 
-    return Container(
+    return DynamicGlassPanel(
+      albumArtProvider: track?.thumbnail != null ? NetworkImage(track!.thumbnail!) : null,
+      borderRadius: 0.0, // Flush to screen edges
       height: 72,
-      decoration: BoxDecoration(
-        color: kSurface,
-        border: Border(top: BorderSide(color: kDivider, width: 0.5)),
-      ),
-      child: track == null
+      child: Container(
+        // The decoration (kSurface/border) is removed so the glass panel handles the background rendering
+        child: track == null
           ? Center(
               child: Text(
                 'No track playing — search for music to begin',
