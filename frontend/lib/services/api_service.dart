@@ -147,15 +147,17 @@ class ApiService {
     return '$baseUrl/api/v1/thumbnail?url=${Uri.encodeComponent(originalUrl)}';
   }
 
-  /// Get lyrics for a specific [videoId].
-  Future<String?> getLyrics(String videoId) async {
+  /// Get time-synced or plain lyrics from LRCLIB.
+  Future<Map<String, dynamic>?> getLyrics(String trackName, String artistName) async {
     try {
-      final uri = Uri.parse('$baseUrl/api/v1/lyrics/$videoId');
+      final uri = Uri.parse('$baseUrl/api/v1/lyrics').replace(queryParameters: {
+        'track_name': trackName,
+        'artist_name': artistName,
+      });
       final response = await _client.get(uri);
       
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['lyrics'] as String?;
+        return jsonDecode(response.body) as Map<String, dynamic>;
       }
       return null;
     } catch (e) {

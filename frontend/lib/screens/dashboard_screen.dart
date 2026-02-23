@@ -115,14 +115,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   _sidebarIcon(Icons.home_filled, 0),
                   _sidebarIcon(Icons.search_rounded, 1),
                   _sidebarIcon(Icons.podcasts_rounded, 2),
-                  _sidebarIcon(Icons.video_library_rounded, 3),
+                  // Removed video streaming (index 3)
                   _sidebarIcon(Icons.auto_awesome, 4),
                   _sidebarIcon(Icons.library_music_rounded, 5),
                 ],
               ),
             ),
           ),
-          _sidebarIcon(Icons.settings, 6),
+          // Removed settings (index 6)
           const SizedBox(height: 30),
         ],
       ),

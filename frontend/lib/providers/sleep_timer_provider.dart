@@ -1,7 +1,8 @@
+import 'player_provider.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../main.dart'; // To access global audioHandler
+import 'package:audio_service/audio_service.dart';
 
 enum SleepTimerMode {
   off,
@@ -34,10 +35,11 @@ class SleepTimerState {
 }
 
 class SleepTimerNotifier extends StateNotifier<SleepTimerState> {
+  final AudioHandler audioHandler;
   Timer? _countdownTimer;
   StreamSubscription? _playbackEventSubscription;
 
-  SleepTimerNotifier() : super(SleepTimerState()) {
+  SleepTimerNotifier(this.audioHandler) : super(SleepTimerState()) {
     // Listen to playback state to detect "End of Track" 
     // audio_service typically transitions to processingState == idle/completed when finished
     _playbackEventSubscription = audioHandler.playbackState.listen((state) {
@@ -118,5 +120,5 @@ class SleepTimerNotifier extends StateNotifier<SleepTimerState> {
 }
 
 final sleepTimerProvider = StateNotifierProvider<SleepTimerNotifier, SleepTimerState>((ref) {
-  return SleepTimerNotifier();
+  return SleepTimerNotifier(audioHandler);
 });

@@ -8,6 +8,10 @@ import '../widgets/rotating_glowing_border.dart';
 import '../widgets/smooth_button.dart';
 import '../screens/artist_screen.dart';
 import '../providers/sleep_timer_provider.dart';
+import '../services/api_service.dart';
+import '../models/track.dart';
+
+final _api = ApiService();
 
 class NowPlayingScreen extends ConsumerStatefulWidget {
   const NowPlayingScreen({super.key});
@@ -155,7 +159,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                         ),
                         SmoothButton(
                           onTap: () {
-                            // TODO: Toggle Real-Time Lyrics view
+                            _showLyricsMenu(context, track);
                           },
                           child: const Icon(Icons.lyrics_outlined, color: kTextWhite),
                         ),
@@ -400,62 +404,64 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
   void _showSleepTimerMenu(BuildContext context, WidgetRef ref, SleepTimerState currentTimer) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (BuildContext sheetContext) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 24),
-          decoration: BoxDecoration(
-            color: kCardDark,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
+        return SafeArea(
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            decoration: const BoxDecoration(
+              color: Color(0xFF1E1E1E),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(32.0)),
             ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Sleep Timer',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: kTextWhite,
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (currentTimer.mode != SleepTimerMode.off) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.timer_outlined, color: kAccent, size: 18),
-                      const SizedBox(width: 12),
-                      Text(
-                        currentTimer.mode == SleepTimerMode.endOfTrack
-                            ? 'Stops after current song'
-                            : 'Stops in ${currentTimer.remainingTime?.inMinutes}m ${(currentTimer.remainingTime?.inSeconds ?? 0) % 60}s',
-                        style: const TextStyle(color: kAccent, fontWeight: FontWeight.w600),
-                      ),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () {
-                          ref.read(sleepTimerProvider.notifier).cancelTimer();
-                          Navigator.pop(sheetContext);
-                        },
-                        child: const Text('Turn Off', style: TextStyle(color: Colors.redAccent)),
-                      ),
-                    ],
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Sleep Timer',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: kTextWhite,
+                    ),
                   ),
-                ),
-                Divider(color: kDivider),
-              ],
-              _buildTimerOption(sheetContext, ref, 'End of track', SleepTimerMode.endOfTrack, currentTimer.mode),
-              _buildTimerOption(sheetContext, ref, '15 minutes', SleepTimerMode.minutes15, currentTimer.mode),
-              _buildTimerOption(sheetContext, ref, '30 minutes', SleepTimerMode.minutes30, currentTimer.mode),
-              _buildTimerOption(sheetContext, ref, '45 minutes', SleepTimerMode.minutes45, currentTimer.mode),
-              _buildTimerOption(sheetContext, ref, '1 hour', SleepTimerMode.hour1, currentTimer.mode),
-              const SizedBox(height: 16),
-            ],
+                  const SizedBox(height: 16),
+                  if (currentTimer.mode != SleepTimerMode.off) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.timer_outlined, color: kAccent, size: 18),
+                          const SizedBox(width: 12),
+                          Text(
+                            currentTimer.mode == SleepTimerMode.endOfTrack
+                                ? 'Stops after current song'
+                                : 'Stops in ${currentTimer.remainingTime?.inMinutes}m ${(currentTimer.remainingTime?.inSeconds ?? 0) % 60}s',
+                            style: const TextStyle(color: kAccent, fontWeight: FontWeight.w600),
+                          ),
+                          const Spacer(),
+                          TextButton(
+                            onPressed: () {
+                              ref.read(sleepTimerProvider.notifier).cancelTimer();
+                              Navigator.pop(sheetContext);
+                            },
+                            child: const Text('Turn Off', style: TextStyle(color: Colors.redAccent)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(color: kDivider),
+                  ],
+                  _buildTimerOption(sheetContext, ref, 'End of track', SleepTimerMode.endOfTrack, currentTimer.mode),
+                  _buildTimerOption(sheetContext, ref, '15 minutes', SleepTimerMode.minutes15, currentTimer.mode),
+                  _buildTimerOption(sheetContext, ref, '30 minutes', SleepTimerMode.minutes30, currentTimer.mode),
+                  _buildTimerOption(sheetContext, ref, '45 minutes', SleepTimerMode.minutes45, currentTimer.mode),
+                  _buildTimerOption(sheetContext, ref, '1 hour', SleepTimerMode.hour1, currentTimer.mode),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
           ),
         );
       },
@@ -476,6 +482,187 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
       onTap: () {
         ref.read(sleepTimerProvider.notifier).setTimer(targetedMode);
         Navigator.pop(context);
+      },
+    );
+  }
+
+  void _showLyricsMenu(BuildContext context, Track track) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext sheetContext) {
+        return SafeArea(
+          child: Container(
+            height: MediaQuery.of(sheetContext).size.height * 0.75,
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E1E1E),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(32.0)),
+              border: Border.all(color: Colors.white.withOpacity(0.05), width: 1.5),
+            ),
+            child: Column(
+            children: [
+              // Drag handle
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 24),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const Text(
+                'Lyrics',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: kTextWhite,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: FutureBuilder<Map<String, dynamic>?>(
+                  future: _api.getLyrics(track.title, track.artist),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(color: kAccent),
+                      );
+                    }
+                    if (snapshot.hasError || !snapshot.hasData || snapshot.data == null || snapshot.data!['type'] == 'error') {
+                      return const Center(
+                        child: Text(
+                          "We couldn't find the lyrics for this track yet.",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: kTextMuted, fontSize: 16),
+                        ),
+                      );
+                    }
+                    
+                    final isSynced = snapshot.data!['type'] == 'synced';
+                    final lyricsText = snapshot.data!['lyrics'] as String;
+                    
+                    return _SyncedLyricsView(lyrics: lyricsText, isSynced: isSynced);
+                  },
+                ),
+              ),
+            ],
+          ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SyncedLyricsView extends ConsumerStatefulWidget {
+  final String lyrics;
+  final bool isSynced;
+  const _SyncedLyricsView({required this.lyrics, required this.isSynced});
+
+  @override
+  ConsumerState<_SyncedLyricsView> createState() => _SyncedLyricsViewState();
+}
+
+class _SyncedLyricsViewState extends ConsumerState<_SyncedLyricsView> {
+  final List<Map<String, dynamic>> _parsedLyrics = [];
+  final ScrollController _scrollController = ScrollController();
+  int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isSynced) {
+      _parseLyrics(widget.lyrics);
+    }
+  }
+
+  void _parseLyrics(String lrc) {
+    final lines = lrc.split('\n');
+    final RegExp timeRegExp = RegExp(r'\[(\d{2}):(\d{2})\.(\d{2,3})\]');
+    for (final line in lines) {
+      final match = timeRegExp.firstMatch(line);
+      if (match != null) {
+        final minutes = int.parse(match.group(1)!);
+        final seconds = int.parse(match.group(2)!);
+        final millisText = match.group(3)!;
+        final millis = millisText.length == 2 ? int.parse(millisText) * 10 : int.parse(millisText);
+        final duration = Duration(minutes: minutes, seconds: seconds, milliseconds: millis);
+        final text = line.substring(match.end).trim();
+        if (text.isNotEmpty) {
+          _parsedLyrics.add({'time': duration, 'text': text});
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.isSynced || _parsedLyrics.isEmpty) {
+      return SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 40),
+          child: Text(
+            widget.lyrics,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 22,
+              height: 1.5,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final currentPosition = ref.watch(positionStreamProvider).value ?? Duration.zero;
+
+    int newIndex = -1;
+    for (int i = _parsedLyrics.length - 1; i >= 0; i--) {
+      if (currentPosition >= _parsedLyrics[i]['time']) {
+        newIndex = i;
+        break;
+      }
+    }
+
+    if (newIndex != _currentIndex && newIndex != -1) {
+      _currentIndex = newIndex;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          final offset = (_currentIndex * 45.0) - (MediaQuery.of(context).size.height * 0.25);
+          _scrollController.animateTo(
+            offset.clamp(0.0, _scrollController.position.maxScrollExtent),
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
+
+    return ListView.builder(
+      controller: _scrollController,
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.only(bottom: 150, top: 40),
+      itemCount: _parsedLyrics.length,
+      itemBuilder: (context, index) {
+        final isCurrent = index == _currentIndex;
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+          child: Text(
+            _parsedLyrics[index]['text'],
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: isCurrent ? 24 : 20,
+              height: 1.5,
+              fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w600,
+              color: isCurrent ? kAccent : Colors.white.withOpacity(0.4),
+            ),
+          ),
+        );
       },
     );
   }
