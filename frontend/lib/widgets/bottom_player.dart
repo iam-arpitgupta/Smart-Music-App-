@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../main.dart';
 import '../providers/player_provider.dart';
-import '../screens/now_playing_screen.dart';
 import '../screens/artist_screen.dart';
 import 'effects_bottom_sheet.dart';
-import 'animated_glowing_border.dart';
+import 'rotating_glowing_border.dart';
 
 /// Full-width bottom player bar: Now Playing | Controls + Slider | Volume
 class BottomPlayer extends ConsumerWidget {
@@ -155,10 +154,9 @@ class BottomPlayer extends ConsumerWidget {
                           ),
                           const SizedBox(width: 4),
                           // Play / Pause
-                          AnimatedGlowingBorder(
-                            isPlaying: isPlaying,
+                          RotatingGlowingBorder(
+                            isPlayingStream: audioHandler.playbackState.map((state) => state.playing),
                             borderWidth: 2.0,
-                            borderRadius: 18.0,
                             child: GestureDetector(
                               onTap: () {
                                 isPlaying

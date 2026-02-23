@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../main.dart';
 import '../providers/player_provider.dart';
-import '../widgets/animated_glowing_border.dart';
+import '../widgets/rotating_glowing_border.dart';
 import '../screens/artist_screen.dart';
 
 class NowPlayingScreen extends ConsumerWidget {
@@ -250,9 +250,8 @@ class NowPlayingScreen extends ConsumerWidget {
                       onTap: () => isPlaying
                           ? audioHandler.pause()
                           : audioHandler.play(),
-                      child: AnimatedGlowingBorder(
-                        isPlaying: isPlaying,
-                        borderRadius: 32.0,
+                      child: RotatingGlowingBorder(
+                        isPlayingStream: audioHandler.playbackState.map((state) => state.playing),
                         borderWidth: 3.0,
                         child: Container(
                           width: 64,
