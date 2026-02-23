@@ -13,24 +13,23 @@ import yt_dlp
 
 from app.schemas import StreamResponse
 
-# yt-dlp options: extract info only, select best audio, no download.
-_YDL_OPTS: dict = {
-    "format": "m4a/bestaudio/best",
-    "quiet": True,
-    "no_warnings": True,
-    "extract_flat": False,
-    # Never write anything to disk
-    "skip_download": True,
-}
+# Dynamic yt-dlp format options are now constructed per request
 
 
-def _extract_info(video_id: str) -> dict:
+def _extract_info(video_id: str, audio_only: bool = True) -> dict:
     """
     Synchronous yt-dlp extraction — meant to be called via
     ``asyncio.to_thread`` so the event loop is never blocked.
     """
     url = f"https://music.youtube.com/watch?v={video_id}"
-    with yt_dlp.YoutubeDL(_YDL_OPTS) as ydl:
+    opts = {
+        "format": "m4a/bestaudio/best" if audio_only else "best",
+        "quiet": True,
+        "no_warnings": True,
+        "extract_flat": False,
+        "skip_download": True,
+    }
+    with yt_dlp.YoutubeDL(opts) as ydl:
         info = ydl.extract_info(url, download=False)
     return info
 
@@ -49,13 +48,13 @@ def _estimate_expiry(stream_url: str) -> int:
         return 21600  # fallback: 6 hours
 
 
-async def get_stream_url(video_id: str) -> StreamResponse:
+async def get_stream_url(video_id: str, audio_only: bool = True) -> StreamResponse:
     """
-    Extract the best-audio direct stream URL for *video_id*.
+    Extract the best direct stream URL for *video_id*.
 
     Runs yt-dlp in a background thread so the async event loop stays free.
     """
-    info = await asyncio.to_thread(_extract_info, video_id)
+    info = await asyncio.to_thread(_extract_info, video_id, audio_only)
 
     # yt-dlp populates 'url' on the selected format
     stream_url: str = info.get("url", "")

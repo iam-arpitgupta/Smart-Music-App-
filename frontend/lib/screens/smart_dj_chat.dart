@@ -9,7 +9,9 @@ import '../providers/library_provider.dart';
 
 /// Smart DJ Chat — AI-powered music chatbot overlay.
 class SmartDJChat extends ConsumerStatefulWidget {
-  const SmartDJChat({super.key});
+  final String mode;
+
+  const SmartDJChat({super.key, this.mode = 'music'});
 
   @override
   ConsumerState<SmartDJChat> createState() => _SmartDJChatState();
@@ -87,7 +89,7 @@ class _SmartDJChatState extends ConsumerState<SmartDJChat> {
       final response = await http.post(
         uri,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'message': text, 'history': history}),
+        body: jsonEncode({'message': text, 'mode': widget.mode, 'history': history}),
       );
 
       if (response.statusCode == 200) {

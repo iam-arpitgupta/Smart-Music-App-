@@ -32,10 +32,11 @@ async def search_tracks(
 async def search_artists(
     q: str = Query(..., min_length=1, description="Artist name"),
     limit: int = Query(10, ge=1, le=30, description="Max results"),
+    filter: str | None = Query(None, description="Optional. 'podcasts', 'videos', etc")
 ):
     """Search YouTube Music for artists matching the query."""
     try:
-        results = await asyncio.to_thread(ytmusic_service.search_artists, q, limit)
+        results = await asyncio.to_thread(ytmusic_service.search_artists, q, limit, filter)
         return results
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Artist search failed: {exc}")

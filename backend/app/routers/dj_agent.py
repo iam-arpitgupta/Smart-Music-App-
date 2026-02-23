@@ -89,6 +89,7 @@ class ChatRequest(BaseModel):
     """Incoming chat payload from the Flutter frontend."""
 
     message: str
+    mode: str = "music"
     history: list[dict[str, str]] = []  # [{"role":"user","content":"..."}, ...]
 
 
@@ -104,32 +105,49 @@ class AgentState(TypedDict):
     messages: List[Any]
     next_route: str
     extracted: str  # supervisor-extracted hint for worker agents
+    mode: str
     music_payload: Dict[str, Any]
 
 
 # ─── ytmusicapi async tool wrappers ──────────────────────────────
 
 
-async def _search_songs(query: str, limit: int = 8) -> Dict[str, Any]:
-    """Search YTMusic for songs matching a mood query (returns playable tracks)."""
-    raw = await asyncio.to_thread(_ytm.search, query, "songs", None, limit)
-    songs = []
-    for item in raw:
-        vid = item.get("videoId", "")
-        if not vid:
-            continue
-        artists = item.get("artists", [])
-        thumbs = item.get("thumbnails", [])
-        songs.append(
-            {
-                "video_id": vid,
-                "title": item.get("title", ""),
-                "artist": ", ".join(a.get("name", "") for a in artists),
-                "thumbnail": thumbs[-1]["url"] if thumbs else None,
-                "duration": item.get("duration"),
-            }
-        )
-    return {"type": "tracks", "data": songs}
+async def _execute_concurrent_search(queries: List[str], mode: str) -> Dict[str, Any]:
+    """Execute 2-3 queries concurrently, shuffle, and return exactly 5 items."""
+    filter_map = {"podcast": "episodes", "video": "videos"}
+    filter_val = filter_map.get(mode, "songs")
+
+    async def _search(q: str) -> List[dict]:
+        raw = await asyncio.to_thread(_ytm.search, q, filter_val, None, 5)
+        out = []
+        for item in raw:
+            vid = item.get("videoId", "")
+            if not vid:
+                continue
+            artists = item.get("artists", [])
+            thumbs = item.get("thumbnails", [])
+            
+            artist_name = "Unknown"
+            if artists:
+                artist_name = ", ".join(a.get("name", "") for a in artists)
+            elif "podcast" in item:
+                artist_name = item["podcast"].get("name", "Unknown")
+
+            out.append(
+                {
+                    "video_id": vid,
+                    "title": item.get("title", ""),
+                    "artist": artist_name,
+                    "thumbnail": thumbs[-1]["url"] if thumbs else None,
+                    "duration": item.get("duration"),
+                }
+            )
+        return out
+
+    buckets = await asyncio.gather(*[_search(q) for q in queries])
+    flat = [item for sublist in buckets for item in sublist]
+    random.shuffle(flat)
+    return {"type": "tracks", "data": flat[:5]}
 
 
 async def _get_artist_top_tracks(artist_query: str) -> Dict[str, Any]:
@@ -227,36 +245,37 @@ async def _build_custom_blend(genres: List[str], per_genre: int = 6) -> Dict[str
 # ─── Agent nodes ──────────────────────────────────────────────────
 
 _SUPERVISOR_PROMPT = """\
-You are the brain of the Smart DJ Chatbot for the Resonance music app.
-Carefully read the full conversation and decide the user's intent.
+You are the brain of the Smart DJ Chatbot for the Resonance media app.
+Carefully read the full conversation and decide the user's intent. 
+Keep in mind that the user is currently looking for: {mode} (this could be songs, podcasts, or videos).
 
 ROUTING RULES (apply the FIRST rule that matches):
 
 1. **Greeting / general chat**: The user just wants to talk, says hello,
-   asks how you are, or has no music-related request.
+   asks how you are, or has no media-related request.
    → route = "END", extracted = ""
 
-2. **Mood / Activity playlist**: The user describes a feeling, emotion,
-   or activity (e.g. "I'm sad", "workout time", "need chill vibes").
+2. **Mood / Topic / Theme**: The user describes a feeling, emotion,
+   activity, or topic (e.g. "I'm sad", "workout time", "comedy", "tech news").
    → route = "mood_agent"
-   → extracted = a concise 3-5 word YouTube Music search query that
-     captures their mood or activity.
+   → extracted = a concise 3-5 word YouTube search query that
+     captures their mood or topic.
 
-3. **Artist recommendation**: The user asks WHO to listen to, wants
-   artist suggestions, or names a specific artist to explore.
+3. **Artist / Creator recommendation**: The user asks WHO to listen to/watch, wants
+   creator suggestions, or names a specific artist/podcaster to explore.
    → route = "artist_agent"
-   → extracted = the name of one renowned musical artist that fits
+   → extracted = the name of one renowned creator/artist that fits
      the user's request.
 
-4. **Custom mix / blend / multi-genre playlist**: The user asks for a
+4. **Custom mix / blend / multi-genre**: The user asks for a
    mix, blend, mashup, or mentions multiple genres, languages, or
-   regions they want combined (e.g. "mix of Punjabi, English, Hindi").
+   topics they want combined.
    → route = "builder_agent"
-   → extracted = comma-separated list of the genres/regions/styles
-     they mentioned (e.g. "Meditative, Punjabi, English, Hindi, Spanish").
+   → extracted = comma-separated list of the genres/topics/styles
+     they mentioned.
 
 RESPOND WITH VALID JSON ONLY — no markdown fences, no extra text:
-{"response": "<your friendly conversational reply>", "route": "<mood_agent|artist_agent|builder_agent|END>", "extracted": "<see rules above>"}
+{{"response": "<your friendly conversational reply>", "route": "<mood_agent|artist_agent|builder_agent|END>", "extracted": "<see rules above>"}}
 """
 
 
@@ -280,8 +299,9 @@ async def supervisor_node(state: AgentState) -> AgentState:
     from langchain_core.messages import AIMessage, SystemMessage
 
     llm = _get_llm()
+    prompt_text = _SUPERVISOR_PROMPT.format(mode=state.get("mode", "music"))
     response = await llm.ainvoke(
-        [SystemMessage(content=_SUPERVISOR_PROMPT)] + state["messages"]
+        [SystemMessage(content=prompt_text)] + state["messages"]
     )
 
     try:
@@ -314,17 +334,24 @@ async def mood_node(state: AgentState) -> AgentState:
     from langchain_core.messages import SystemMessage
 
     query = state.get("extracted", "").strip()
-    if not query:
-        llm = _get_llm()
-        prompt = SystemMessage(
-            content="Generate a 3-5 word YouTube Music search query that "
-            "captures the user's mood or activity. Output ONLY the "
-            "query string, nothing else."
-        )
-        llm_resp = await llm.ainvoke([prompt] + state["messages"])
-        query = llm_resp.content.strip().strip('"')
+    llm = _get_llm()
+    prompt = SystemMessage(
+        content=f"Based on the user's intent to look for {state['mode']} content and the extracted hint '{query}', "
+        "generate strictly a JSON array of 2 to 3 very diverse, sophisticated search queries. "
+        "Output ONLY a raw JSON array of strings, e.g. [\"query 1\", \"query 2\"]. Nothing else."
+    )
+    llm_resp = await llm.ainvoke([prompt] + state["messages"])
+    
+    try:
+        cleaned = re.sub(r"^```(?:json)?\s*", "", llm_resp.content.strip())
+        cleaned = re.sub(r"\s*```$", "", cleaned)
+        queries = json.loads(cleaned)
+        if not isinstance(queries, list):
+            queries = [str(query)]
+    except Exception:
+        queries = [query or "top hits"]
 
-    payload = await _search_songs(query)
+    payload = await _execute_concurrent_search(queries, state["mode"])
     state["music_payload"] = payload
     return state
 
@@ -422,6 +449,7 @@ async def chat_endpoint(req: ChatRequest):
             "messages": messages,
             "next_route": "",
             "extracted": "",
+            "mode": req.mode.lower(),
             "music_payload": {},
         }
 

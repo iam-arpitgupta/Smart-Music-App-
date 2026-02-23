@@ -53,9 +53,17 @@ class ApiService {
   }
 
   /// Search YouTube Music for artists matching [query].
-  Future<List<Artist>> searchArtists(String query, {int limit = 10}) async {
+  Future<List<Artist>> searchArtists(String query, {int limit = 10, String? filterMode}) async {
+    final Map<String, dynamic> qParams = {
+      'q': query,
+      'limit': '$limit',
+    };
+    if (filterMode != null) {
+      qParams['filter'] = filterMode;
+    }
+
     final uri = Uri.parse('$baseUrl/api/v1/search/artists')
-        .replace(queryParameters: {'q': query, 'limit': '$limit'});
+        .replace(queryParameters: qParams);
 
     final response = await _client.get(uri);
 
@@ -123,17 +131,9 @@ class ApiService {
   }
 
   /// Get the direct audio stream URL for a [videoId].
-  /// Returns the raw Google CDN URL that the audio player can stream from.
+  /// This now points to our backend proxy to securely stream the content and bypass CORS.
   Future<String> getStreamUrl(String videoId) async {
-    final uri = Uri.parse('$baseUrl/api/v1/stream/$videoId');
-    final response = await _client.get(uri);
-
-    if (response.statusCode != 200) {
-      throw Exception('Stream extraction failed (${response.statusCode}): ${response.body}');
-    }
-
-    final data = jsonDecode(response.body);
-    return data['stream_url'] as String;
+    return '$baseUrl/api/v1/stream/$videoId';
   }
 
   /// Get the proxy download URL for a [videoId].

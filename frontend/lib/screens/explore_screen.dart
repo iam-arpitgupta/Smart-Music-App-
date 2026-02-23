@@ -115,9 +115,11 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
     try {
       final api = ref.read(apiServiceProvider);
-      // Fire both searches in parallel
+      // Fire both searches in parallel, but skip artists for videos tab
       final results = await Future.wait([
-        api.searchArtists(query, limit: 5),
+        _searchFilter == 'videos' 
+            ? Future.value(<Artist>[]) 
+            : api.searchArtists(query, limit: 5, filterMode: _searchFilter),
         api.searchTracks(query, limit: 10, filterMode: _searchFilter),
       ]);
 
@@ -351,28 +353,15 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
       children: [
-        // ─── Header logic based on context ────────────────────────
-        if (_searchController.text.isEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(28, 0, 28, 16),
-            child: Text(
-              _searchFilter == 'podcasts' 
-                  ? 'Recommended Podcasts' 
-                  : _searchFilter == 'videos' 
-                      ? 'Trending Videos' 
-                      : 'Made for You',
-              style: const TextStyle(
-                fontSize: 18, 
-                fontWeight: FontWeight.w700, 
-                color: kTextWhite
-              ),
-            ),
-          ),
         // ─── Artists Section ──────────────────────────────────────
         if (_artists.isNotEmpty) ...[
           _SectionHeader(
             icon: Icons.person_rounded,
-            title: 'Artists',
+            title: _searchFilter == 'podcasts' 
+                ? 'Podcasters' 
+                : _searchFilter == 'videos' 
+                    ? 'Channels' 
+                    : 'Artists',
             count: _artists.length,
           ),
           ..._artists.map((artist) => _ArtistTile(
@@ -385,8 +374,16 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
         // ─── Songs Section ───────────────────────────────────────
         if (_songs.isNotEmpty) ...[
           _SectionHeader(
-            icon: Icons.music_note_rounded,
-            title: 'Songs',
+            icon: _searchFilter == 'podcasts'
+                ? Icons.podcasts_rounded
+                : _searchFilter == 'videos'
+                    ? Icons.video_library_rounded
+                    : Icons.music_note_rounded,
+            title: _searchFilter == 'podcasts' 
+                ? 'Episodes' 
+                : _searchFilter == 'videos' 
+                    ? 'Videos' 
+                    : 'Songs',
             count: _songs.length,
           ),
           ..._songs.map((track) => TrackTile(
@@ -494,14 +491,16 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                               color: kAccent,
                               borderRadius: BorderRadius.circular(24),
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.play_arrow_rounded,
+                                const Icon(Icons.play_arrow_rounded,
                                     color: Colors.black, size: 20),
                                 SizedBox(width: 6),
                                 Text(
-                                  'Play All',
+                                  _searchFilter == 'podcasts'
+                                      ? 'Play All Episodes'
+                                      : 'Play All',
                                   style: TextStyle(
                                     color: Colors.black,
                                     fontWeight: FontWeight.w600,
@@ -538,7 +537,9 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                   child: Row(
                     children: [
                       Text(
-                        '${_artistSongs.length} songs',
+                        _searchFilter == 'podcasts'
+                            ? '${_artistSongs.length} episodes'
+                            : '${_artistSongs.length} songs',
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,

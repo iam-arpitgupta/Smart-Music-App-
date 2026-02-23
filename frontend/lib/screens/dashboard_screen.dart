@@ -163,7 +163,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         unselectedItemColor: kPremiumTextMuted,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
-        onTap: (index) => setState(() => _selectedIndex = index),
+        onTap: (index) {
+          if (index == 4) {
+            showDialog(context: context, builder: (_) => const SmartDJChat(mode: 'music'));
+          } else {
+            setState(() => _selectedIndex = index);
+          }
+        },
         showSelectedLabels: false,
         showUnselectedLabels: false,
         items: const [
