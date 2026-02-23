@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../main.dart';
 import '../providers/player_provider.dart';
 import '../widgets/animated_glowing_border.dart';
+import '../screens/artist_screen.dart';
 
 class NowPlayingScreen extends ConsumerWidget {
   const NowPlayingScreen({super.key});
@@ -51,12 +52,14 @@ class NowPlayingScreen extends ConsumerWidget {
             children: [
               // Top bar
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 32),
+                      icon: const Icon(Icons.keyboard_arrow_down_rounded,
+                          size: 32),
                       color: kTextWhite,
                       onPressed: () => Navigator.pop(context),
                     ),
@@ -133,10 +136,27 @@ class NowPlayingScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Text(
-                      track.artist,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 14, color: kTextMuted),
+                    MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ArtistScreen(artistName: track.artist),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          track.artist,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: kTextMuted,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -152,18 +172,22 @@ class NowPlayingScreen extends ConsumerWidget {
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
                         trackHeight: 3,
-                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                        thumbShape:
+                            const RoundSliderThumbShape(enabledThumbRadius: 6),
+                        overlayShape:
+                            const RoundSliderOverlayShape(overlayRadius: 14),
                         secondaryActiveTrackColor: kTextMuted.withOpacity(0.2),
                       ),
                       child: Slider(
                         value: position.inMilliseconds.toDouble().clamp(
-                              0, (duration?.inMilliseconds ?? 1).toDouble()),
+                            0, (duration?.inMilliseconds ?? 1).toDouble()),
                         max: (duration?.inMilliseconds ?? 1).toDouble(),
-                        secondaryTrackValue: buffered.inMilliseconds.toDouble().clamp(
-                              0, (duration?.inMilliseconds ?? 1).toDouble()),
-                        onChanged: (v) =>
-                            audioHandler.seek(Duration(milliseconds: v.toInt())),
+                        secondaryTrackValue: buffered.inMilliseconds
+                            .toDouble()
+                            .clamp(
+                                0, (duration?.inMilliseconds ?? 1).toDouble()),
+                        onChanged: (v) => audioHandler
+                            .seek(Duration(milliseconds: v.toInt())),
                       ),
                     ),
                     Padding(
@@ -172,9 +196,11 @@ class NowPlayingScreen extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(_fmt(position),
-                              style: const TextStyle(fontSize: 11, color: kTextMuted)),
+                              style: const TextStyle(
+                                  fontSize: 11, color: kTextMuted)),
                           Text(_fmt(duration),
-                              style: const TextStyle(fontSize: 11, color: kTextMuted)),
+                              style: const TextStyle(
+                                  fontSize: 11, color: kTextMuted)),
                         ],
                       ),
                     ),
@@ -221,8 +247,9 @@ class NowPlayingScreen extends ConsumerWidget {
                     color: Colors.transparent,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(32),
-                      onTap: () =>
-                          isPlaying ? audioHandler.pause() : audioHandler.play(),
+                      onTap: () => isPlaying
+                          ? audioHandler.pause()
+                          : audioHandler.play(),
                       child: AnimatedGlowingBorder(
                         isPlaying: isPlaying,
                         borderRadius: 32.0,
@@ -242,7 +269,9 @@ class NowPlayingScreen extends ConsumerWidget {
                             ],
                           ),
                           child: Icon(
-                            isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                            isPlaying
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded,
                             size: 34,
                             color: Colors.black,
                           ),

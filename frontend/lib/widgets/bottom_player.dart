@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../main.dart';
 import '../providers/player_provider.dart';
 import '../screens/now_playing_screen.dart';
+import '../screens/artist_screen.dart';
 import 'effects_bottom_sheet.dart';
 import 'animated_glowing_border.dart';
 
@@ -87,13 +88,27 @@ class BottomPlayer extends ConsumerWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 2),
-                                Text(
-                                  track.artist,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: kTextMuted,
+                                MouseRegion(
+                                  cursor: SystemMouseCursors.click,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => ArtistScreen(
+                                              artistName: track.artist),
+                                        ),
+                                      );
+                                    },
+                                    child: Text(
+                                      track.artist,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        color: kTextMuted,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ],
@@ -170,8 +185,7 @@ class BottomPlayer extends ConsumerWidget {
                           const SizedBox(width: 4),
                           // Skip next
                           IconButton(
-                            icon: const Icon(Icons.skip_next_rounded,
-                                size: 24),
+                            icon: const Icon(Icons.skip_next_rounded, size: 24),
                             color: kTextWhite,
                             onPressed: () => skipNext(ref),
                             visualDensity: VisualDensity.compact,
@@ -206,21 +220,18 @@ class BottomPlayer extends ConsumerWidget {
                               child: SliderTheme(
                                 data: SliderTheme.of(context).copyWith(
                                   trackHeight: 2,
-                                  thumbShape:
-                                      const RoundSliderThumbShape(
-                                          enabledThumbRadius: 4),
-                                  overlayShape:
-                                      const RoundSliderOverlayShape(
-                                          overlayRadius: 10),
+                                  thumbShape: const RoundSliderThumbShape(
+                                      enabledThumbRadius: 4),
+                                  overlayShape: const RoundSliderOverlayShape(
+                                      overlayRadius: 10),
                                 ),
                                 child: Slider(
-                                  value: position.inMilliseconds
-                                      .toDouble()
-                                      .clamp(
-                                        0.0,
-                                        (duration?.inMilliseconds ?? 1)
-                                            .toDouble(),
-                                      ),
+                                  value:
+                                      position.inMilliseconds.toDouble().clamp(
+                                            0.0,
+                                            (duration?.inMilliseconds ?? 1)
+                                                .toDouble(),
+                                          ),
                                   max: (duration?.inMilliseconds ?? 1)
                                       .toDouble(),
                                   onChanged: (v) {
